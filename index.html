@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D1B1E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Souffle">
+<meta name="description" content="Respiration guidée, méditations et paysages sonores.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>*,*::before,*::after{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;padding-top:env(safe-area-inset-top,0px);overscroll-behavior-y:none}img{max-width:100%}</style>
+<title>Souffle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#0D1B1E; --bg2:#11252A; --surface:#162E34; --surface2:#1E3B42;
+  --line:rgba(234,240,236,.09); --text:#EAF0EC; --muted:#93ABA4; --faint:#5E7A74;
+  --sand:#E6BE85; --sage:#86C2AC; --rose:#D99A8C; --sky:#8EB6D1; --olive:#C9C28A; --mist:#A9B4D0;
+  --display:"Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --body:"Manrope", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --r:18px;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible{outline:2px solid var(--sand);outline-offset:3px;border-radius:10px}
+#app{max-width:520px;margin:0 auto;padding-inline:18px;padding-block:14px calc(100px + env(safe-area-inset-bottom,0px));position:relative}
+.glow{position:fixed;inset:-20% -20% auto -20%;height:70vh;pointer-events:none;z-index:0;
+  background:radial-gradient(40% 50% at 30% 30%,rgba(134,194,172,.16),transparent 70%),radial-gradient(35% 45% at 75% 20%,rgba(230,190,133,.12),transparent 70%);
+  animation:drift 24s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(4%,6%,0) scale(1.08)}}
+.view{position:relative;z-index:1;display:flex;flex-direction:column;gap:26px}
+.eyebrow{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--display);font-weight:500;font-size:40px;line-height:1.02;margin:6px 0 0;text-wrap:balance;letter-spacing:-.01em}
+h1 em{font-style:italic;color:var(--sand)}
+h2{font-family:var(--display);font-weight:600;font-size:25px;margin:0;line-height:1.1;text-wrap:balance}
+.sub{color:var(--muted);margin:6px 0 0;max-width:60ch}
+.row-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.link{color:var(--sand);font-size:13px;font-weight:600}
+
+/* Home */
+.quote{font-family:var(--display);font-style:italic;font-size:21px;line-height:1.3;color:var(--text);margin:0;padding-left:14px;border-left:1px solid var(--sand)}
+.quote small{display:block;font-family:var(--body);font-style:normal;font-size:12px;color:var(--muted);margin-top:6px}
+.mood{background:var(--surface);border-radius:var(--r);padding:18px}
+.faces{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:14px}
+.face{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0 8px;border-radius:14px;color:var(--muted);font-size:11.5px;transition:background .2s,color .2s}
+.face[aria-pressed="true"]{background:var(--surface2);color:var(--c)}
+.face:hover{color:var(--c)}
+.mood-reply{margin:14px 0 0;font-size:14px;color:var(--muted)}
+.reco{display:flex;gap:16px;align-items:center;background:linear-gradient(135deg,var(--surface2),var(--surface));border-radius:var(--r);padding:18px;text-align:left;width:100%}
+.orb{flex:none;width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6,transparent 45%),radial-gradient(circle at 50% 50%,var(--c),color-mix(in srgb,var(--c) 35%,var(--bg)) 75%);box-shadow:0 0 30px -6px var(--c)}
+.reco .t{font-family:var(--display);font-size:22px;font-weight:600;line-height:1.1}
+.meta{font-size:12.5px;color:var(--muted)}
+.play-dot{margin-left:auto;flex:none;width:42px;height:42px;border-radius:50%;background:var(--sand);color:var(--bg);display:grid;place-items:center}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.qtile{background:var(--surface);border-radius:var(--r);padding:16px;text-align:left;display:flex;flex-direction:column;gap:10px;min-height:118px}
+.qtile svg{color:var(--c)}
+.qtile b{font-weight:600;font-size:15px;line-height:1.25}
+.qtile span{font-size:12.5px;color:var(--muted);margin-top:auto}
+.strip{display:flex;gap:10px}
+.stat{flex:1;padding:14px 0 0;border-top:1px solid var(--line)}
+.stat .n{font-family:var(--display);font-size:34px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.stat .l{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* Chips */
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:-18px;padding-inline:18px;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 14px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:500;color:var(--muted);transition:all .2s}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* Meditations */
+.list{display:flex;flex-direction:column;gap:10px}
+.item{display:flex;gap:14px;align-items:center;padding:14px;border-radius:var(--r);background:var(--surface);text-align:left;width:100%}
+.item .orb{width:50px;height:50px}
+.item .t{font-weight:600;font-size:15.5px}
+.item .d{font-size:13px;color:var(--muted);margin-top:2px;line-height:1.4}
+.item .dur{margin-left:auto;flex:none;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+
+/* Breathe */
+.bstage{position:relative;display:grid;place-items:center;height:330px;margin-block:4px}
+.bring{position:absolute;width:300px;height:300px;max-width:100%}
+.bcircle{width:250px;height:250px;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(134,194,172,.55),rgba(134,194,172,.12) 60%,transparent 72%);transform:scale(.55);transition-property:transform;transition-timing-function:cubic-bezier(.45,0,.55,1);display:grid;place-items:center}
+.bcore{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.bphase{font-family:var(--display);font-size:30px;font-weight:600}
+.bcount{font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:22px}
+.pats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pat{padding:14px;border-radius:16px;border:1px solid var(--line);text-align:left;transition:all .2s}
+.pat b{display:block;font-weight:600;font-size:14px}
+.pat span{font-size:12px;color:var(--muted)}
+.pat[aria-pressed="true"]{border-color:var(--sage);background:rgba(134,194,172,.1)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 26px;border-radius:999px;background:var(--sand);color:var(--bg);font-weight:700;font-size:15px}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;color:var(--muted)}
+.sw{width:46px;height:28px;border-radius:999px;background:var(--surface2);position:relative;transition:background .2s;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:all .2s}
+.sw[aria-checked="true"]{background:var(--sage)}
+.sw[aria-checked="true"]::after{left:21px;background:var(--bg)}
+
+/* Sounds */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.snd{background:var(--surface);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;border:1px solid transparent;transition:all .25s}
+.snd.on{border-color:color-mix(in srgb,var(--c) 55%,transparent);background:color-mix(in srgb,var(--c) 12%,var(--surface))}
+.snd button.head{display:flex;align-items:center;justify-content:space-between;text-align:left;width:100%}
+.snd .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--surface2);color:var(--c)}
+.snd .nm{font-weight:600;font-size:15px}
+.snd .st{font-size:12px;color:var(--muted)}
+.bars{display:flex;gap:3px;align-items:flex-end;height:16px}
+.bars i{width:3px;background:var(--c);border-radius:2px;height:4px}
+.snd.on .bars i{animation:eq 1.1s ease-in-out infinite}
+.bars i:nth-child(2){animation-delay:.2s!important}.bars i:nth-child(3){animation-delay:.45s!important}
+@keyframes eq{50%{height:16px}}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--surface2);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--text);border:0}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--text);border:0}
+.snd input[disabled]{opacity:.3}
+.presets{display:flex;flex-direction:column;gap:8px}
+.preset{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:16px;border:1px solid var(--line);text-align:left}
+.preset b{font-weight:600;font-size:14.5px}.preset span{font-size:12.5px;color:var(--muted)}
+.timerline{font-size:13px;color:var(--sand);min-height:20px;margin-top:8px}
+
+.night{display:flex;gap:14px;align-items:center;padding:16px;border-radius:var(--r);background:linear-gradient(135deg,#1A2A40,var(--surface));border:1px solid var(--line);transition:border-color .3s}
+.night>svg{flex:none;color:var(--sand)}
+.night.active{border-color:color-mix(in srgb,var(--sand) 60%,transparent)}
+.nt{flex:1;min-width:0}.nt b{display:block;font-weight:600;font-size:15px}.nt span{display:block;font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:2px}
+.night .btn{height:42px;padding:0 18px;flex:none;font-size:14px}
+.btn[disabled]{opacity:.45;cursor:default}
+#sndHint:empty{display:none}
+/* Profile */
+.chart{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:150px;padding-top:18px}
+.bar{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px}
+.bar .v{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar .b{width:100%;max-width:30px;border-radius:8px 8px 3px 3px;background:linear-gradient(to top,rgba(134,194,172,.35),var(--sage));min-height:3px}
+.bar .b.zero{background:var(--surface2)}
+.bar .dl{font-size:11.5px;color:var(--muted);text-transform:capitalize}
+.bar.today .dl{color:var(--sand);font-weight:700}
+.moodrow{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:10px;justify-items:center}
+.moodrow div{color:var(--faint);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px}
+.card{background:var(--surface);border-radius:var(--r);padding:18px}
+.hist{display:flex;flex-direction:column}
+.hist div{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.hist div:first-child{border-top:0}
+.hist span{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.empty{color:var(--muted);font-size:13.5px;margin:6px 0 0}
+label.fld{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--muted)}
+input[type=text]{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--text);font:inherit;font-size:15px}
+.danger{color:var(--rose);font-size:13.5px;font-weight:600}
+.confirm{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+
+/* Tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(13,27,30,.86);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px))}
+.tabs-in{max-width:520px;margin:0 auto;display:flex;justify-content:space-around}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--faint);padding:4px 8px;min-width:58px;transition:color .2s}
+.tab[aria-current="page"]{color:var(--sand)}
+
+/* Player */
+.player{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 14px) 20px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.player::before{content:"";position:fixed;inset:0;background:radial-gradient(60% 45% at 50% 38%,color-mix(in srgb,var(--c) 22%,transparent),transparent 70%);pointer-events:none}
+.pin{position:relative;max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:18px}
+.ptop{display:flex;justify-content:space-between;align-items:center}
+.iconbtn{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--surface)}
+.pstage{position:relative;display:grid;place-items:center;height:290px}
+.pstage svg.ring{position:absolute;width:270px;height:270px;max-width:100%;transform:rotate(-90deg)}
+.porb{width:170px;height:170px;border-radius:50%;background:radial-gradient(circle at 38% 32%,#ffffff40,transparent 42%),radial-gradient(circle,var(--c),color-mix(in srgb,var(--c) 25%,var(--bg)) 72%);box-shadow:0 0 70px -10px var(--c);transform:scale(.9)}
+.player.run .porb{animation:pbreath 10s ease-in-out infinite}
+@keyframes pbreath{0%,100%{transform:scale(.86)}50%{transform:scale(1.02)}}
+.caption{font-family:var(--display);font-size:24px;line-height:1.3;text-align:center;min-height:130px;margin:0;text-wrap:balance;transition:opacity .6s}
+.ptime{text-align:center;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pctrl{display:flex;align-items:center;justify-content:center;gap:26px}
+.bigplay{width:74px;height:74px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center}
+.small{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted);width:64px}
+.small .iconbtn[aria-pressed="true"]{background:var(--sage);color:var(--bg)}
+.amb{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+@media (prefers-reduced-motion:reduce){
+  .glow,.player.run .porb,.snd.on .bars i{animation:none}
+  .bcircle{transition-duration:0s!important}
+}
+</style>
+
+</head>
+<body>
+<div class="glow" aria-hidden="true"></div>
+<div id="app">
+
+  <!-- ACCUEIL -->
+  <section class="view" id="v-home" data-view="home">
+    <header>
+      <div class="eyebrow" id="today"></div>
+      <h1 id="greet"></h1>
+    </header>
+    <p class="quote" id="quote"></p>
+
+    <div class="mood">
+      <h2>Comment vous sentez-vous&nbsp;?</h2>
+      <div class="faces" id="faces"></div>
+      <p class="mood-reply" id="moodReply">Un clic suffit. Souffle vous propose ensuite une séance adaptée.</p>
+    </div>
+
+    <div>
+      <div class="row-h"><div class="eyebrow" id="recoLabel">Pour vous</div></div>
+      <button class="reco" id="reco"></button>
+    </div>
+
+    <div class="quick">
+      <button class="qtile" style="--c:var(--sage)" data-go="breathe">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="8.5" opacity=".5"/></svg>
+        <b>Respirer 1&nbsp;minute</b><span>Cohérence cardiaque</span>
+      </button>
+      <button class="qtile" style="--c:var(--sky)" data-go="sounds">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z"/></svg>
+        <b>Sons pour dormir</b><span>Pluie, océan, feu…</span>
+      </button>
+    </div>
+
+    <div class="strip">
+      <div class="stat"><div class="n" id="hStreak">0</div><div class="l">jours d'affilée</div></div>
+      <div class="stat"><div class="n" id="hWeek">0</div><div class="l">minutes cette semaine</div></div>
+      <div class="stat"><div class="n" id="hCount">0</div><div class="l">séances au total</div></div>
+    </div>
+  </section>
+
+  <!-- RESPIRER -->
+  <section class="view" id="v-breathe" data-view="breathe" hidden>
+    <header>
+      <div class="eyebrow">Respiration guidée</div>
+      <h1>Suivez le <em>cercle</em></h1>
+      <p class="sub">Inspirez quand il grandit, expirez quand il se rétracte.</p>
+    </header>
+    <div class="bstage">
+      <svg class="bring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47" fill="none" stroke="rgba(234,240,236,.08)" stroke-width="1"/><circle id="bprog" cx="50" cy="50" r="47" fill="none" stroke="#E6BE85" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="295.3" stroke-dashoffset="295.3" transform="rotate(-90 50 50)"/></svg>
+      <div class="bcircle" id="bcircle"></div>
+      <div class="bcore"><div class="bphase" id="bphase">Prêt&nbsp;?</div><div class="bcount" id="bcount">Choisissez un rythme</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="bstart">Commencer</button>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:10px">Rythme</div>
+      <div class="pats" id="pats"></div>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:10px">Durée</div>
+      <div class="chips" id="bdur"></div>
+    </div>
+    <div class="toggle"><span>Signal sonore à chaque phase</span><button class="sw" id="btone" role="switch" aria-checked="true" aria-label="Signal sonore"></button></div>
+  </section>
+
+  <!-- MEDITER -->
+  <section class="view" id="v-meditate" data-view="meditate" hidden>
+    <header>
+      <div class="eyebrow">Méditations guidées</div>
+      <h1>Un moment <em>pour soi</em></h1>
+      <p class="sub">Guidage vocal en français, texte affiché à l'écran et ambiance sonore au choix.</p>
+    </header>
+    <div class="chips" id="cats"></div>
+    <div class="list" id="mlist"></div>
+  </section>
+
+  <!-- SONS -->
+  <section class="view" id="v-sounds" data-view="sounds" hidden>
+    <header>
+      <div class="eyebrow">Paysages sonores</div>
+      <h1>Composez votre <em>ambiance</em></h1>
+      <p class="sub">Activez plusieurs sons et réglez chaque volume. Tout est généré en direct, sans boucle audible.</p>
+    </header>
+    <div class="sgrid" id="sgrid"></div>
+    <p class="timerline" id="sndHint" style="margin:-12px 0 0" role="status"></p>
+    <div class="night" id="night"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5Z"/></svg><div class="nt"><b>Mode nuit</b><span id="nightTxt"></span></div><button class="btn" id="nightBtn">Lancer</button></div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:10px">Minuteur de sommeil</div>
+      <div class="chips" id="stimer"></div>
+      <div class="timerline" id="timerline"></div>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:10px">Mélanges</div>
+      <div class="presets" id="presets"></div>
+    </div>
+    <div class="btn-row"><button class="btn ghost" id="stopAll">Tout arrêter</button></div>
+  </section>
+
+  <!-- PARCOURS -->
+  <section class="view" id="v-profile" data-view="profile" hidden>
+    <header>
+      <div class="eyebrow">Votre parcours</div>
+      <h1>Chaque minute <em>compte</em></h1>
+    </header>
+    <div class="strip">
+      <div class="stat"><div class="n" id="pStreak">0</div><div class="l">jours d'affilée</div></div>
+      <div class="stat"><div class="n" id="pTotal">0</div><div class="l">minutes au total</div></div>
+      <div class="stat"><div class="n" id="pCount">0</div><div class="l">séances</div></div>
+    </div>
+    <div class="card">
+      <h2>7 derniers jours</h2>
+      <div class="chart" id="chart"></div>
+      <div class="eyebrow" style="margin-top:20px">Humeur</div>
+      <div class="moodrow" id="moodrow"></div>
+    </div>
+    <div class="card">
+      <h2>Dernières séances</h2>
+      <div class="hist" id="hist" style="margin-top:8px"></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:14px">
+      <h2>Voix du guide</h2>
+      <label class="fld" for="vsel">Voix
+        <select id="vsel" style="background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--text);font:inherit;font-size:15px"></select>
+      </label>
+      <label class="fld" for="vrate">Vitesse de lecture
+        <input type="range" id="vrate" min="0.65" max="1" step="0.01">
+      </label>
+      <button class="btn ghost" id="vtest" style="align-self:flex-start;height:44px">Écouter un extrait</button>
+      <p class="empty" style="margin:0">Les voix marquées ★ sont les plus naturelles. Sur iPhone, ajoutez-en une gratuitement : Réglages › Accessibilité › Contenu énoncé › Voix › Français, puis téléchargez « Amélie (Premium) » ou « Thomas (Amélioré) ». Rouvrez ensuite Souffle.</p>
+    </div>
+    <label class="fld" for="pname">Votre prénom
+      <input type="text" id="pname" autocomplete="given-name" maxlength="24">
+    </label>
+    <div class="confirm" id="resetZone"><button class="danger" id="resetBtn">Effacer mes données</button></div>
+    <p class="empty">Vos données restent sur cet appareil, dans ce navigateur.</p>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Navigation">
+  <div class="tabs-in" id="tabs">
+    <button class="tab" data-go="home" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1Z"/></svg>Accueil</button>
+    <button class="tab" data-go="breathe"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8"/></svg>Respirer</button>
+    <button class="tab" data-go="meditate"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5.5" r="2.2"/><path d="M12 9v5M7 11.5l5 2.5 5-2.5M5 19c2-2.4 4.5-3.5 7-3.5s5 1.1 7 3.5"/></svg>Méditer</button>
+    <button class="tab" data-go="sounds"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10.5v3"/></svg>Sons</button>
+    <button class="tab" data-go="profile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 19h16M7 16v-5M12 16V6M17 16v-8"/></svg>Parcours</button>
+  </div>
+</nav>
+
+<div class="player" id="player" hidden>
+  <div class="pin">
+    <div class="ptop">
+      <button class="iconbtn" id="pclose" aria-label="Fermer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <div class="eyebrow" id="pcat"></div>
+      <div style="width:42px"></div>
+    </div>
+    <h2 id="ptitle" style="text-align:center;font-size:30px"></h2>
+    <div class="pstage">
+      <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="none" stroke="rgba(234,240,236,.08)" stroke-width="1.2"/><circle id="pprog" cx="50" cy="50" r="46" fill="none" stroke="#EAF0EC" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="289"/></svg>
+      <div class="porb"></div>
+    </div>
+    <p class="caption" id="pcap"></p>
+    <div class="ptime" id="ptime"></div>
+    <div class="pctrl">
+      <div class="small"><button class="iconbtn" id="pvoice" aria-pressed="true" aria-label="Voix"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9Z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg></button>Voix</div>
+      <button class="bigplay" id="pplay" aria-label="Lecture"></button>
+      <div class="small"><button class="iconbtn" id="pback" aria-label="Reculer de 15 secondes"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.6L4 8.5"/><path d="M4 4v4.5h4.5"/></svg></button>−15 s</div>
+    </div>
+    <div>
+      <div class="eyebrow" style="text-align:center;margin-bottom:10px">Ambiance</div>
+      <div class="amb" id="pamb"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- Données ---------- */
+const KEY='souffle.v1';
+let S={name:'Coz',moods:{},log:[],tone:true};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>key(new Date());
+function daysBack(n){const d=new Date();d.setDate(d.getDate()-n);return d}
+
+const CAT={ 'Sommeil':'var(--sky)','Stress':'var(--sage)','Anxiété':'var(--rose)','Focus':'var(--olive)','Énergie':'var(--sand)','Bien-être':'var(--mist)','Débutant':'var(--sage)'};
+const CATHEX={'Sommeil':'#8EB6D1','Stress':'#86C2AC','Anxiété':'#D99A8C','Focus':'#C9C28A','Énergie':'#E6BE85','Bien-être':'#A9B4D0','Débutant':'#86C2AC'};
+
+const SESS=[
+ {id:'debut',t:'Première méditation',c:'Débutant',m:3,d:'Trois minutes pour découvrir la pratique, sans rien réussir.',s:[
+  [0,"Bienvenue. Asseyez-vous confortablement, rien de plus n'est nécessaire."],
+  [.12,"Remarquez simplement votre respiration, sans chercher à la changer."],
+  [.35,"Votre esprit va vagabonder, c'est normal. Revenir au souffle, c'est cela, méditer."],
+  [.65,"Sentez l'air frais à l'inspiration, un peu plus chaud à l'expiration."],
+  [.9,"C'est terminé. Vous pouvez revenir à cette pause quand vous voulez."]]},
+ {id:'scan',t:'Scan corporel',c:'Sommeil',m:10,d:'Relâchez chaque partie du corps, des pieds jusqu’au visage.',s:[
+  [0,"Installez-vous confortablement, allongé ou assis. Fermez doucement les yeux."],
+  [.05,"Prenez trois respirations profondes. Inspirez par le nez, et relâchez lentement par la bouche."],
+  [.14,"Portez votre attention sur vos pieds. Remarquez leur poids, leur chaleur. Laissez-les se détendre."],
+  [.26,"Remontez vers les mollets et les genoux. À chaque expiration, ils deviennent plus lourds."],
+  [.38,"Sentez vos cuisses, votre bassin. Laissez le sol vous porter entièrement."],
+  [.5,"Votre ventre se soulève et s'abaisse au rythme du souffle. Rien à faire, juste observer."],
+  [.62,"Détendez vos épaules. Laissez-les descendre, loin des oreilles. Vos bras deviennent lourds."],
+  [.74,"Relâchez la mâchoire, les joues, l'espace entre les sourcils. Votre visage est paisible."],
+  [.86,"Tout votre corps est détendu, du sommet de la tête jusqu'aux pieds."],
+  [.95,"Restez dans ce calme encore quelques instants. Vous pouvez vous laisser glisser vers le sommeil."]]},
+ {id:'stress',t:'Relâcher le stress',c:'Stress',m:7,d:'Repérer la tension dans le corps et la laisser se dissoudre.',s:[
+  [0,"Asseyez-vous le dos droit, les épaules relâchées. Fermez les yeux si vous le souhaitez."],
+  [.06,"Inspirez profondément en comptant jusqu'à quatre, et expirez en comptant jusqu'à six."],
+  [.18,"Repérez où la tension se loge dans votre corps. La nuque, les épaules, le ventre ?"],
+  [.3,"Imaginez que votre souffle se dirige vers cette zone. À l'expiration, la tension se dissout."],
+  [.45,"Les pensées passent comme des nuages. Laissez-les défiler sans vous y accrocher."],
+  [.6,"Revenez à votre souffle. C'est votre ancre, toujours disponible, ici et maintenant."],
+  [.75,"Remarquez ce qui a changé depuis le début. Même un léger apaisement compte."],
+  [.9,"Revenez doucement. Bougez les doigts, étirez-vous, puis ouvrez les yeux."]]},
+ {id:'anx',t:"Apaiser l'anxiété",c:'Anxiété',m:8,d:'Ancrage par les sens et expiration longue pour calmer la vague.',s:[
+  [0,"Vous êtes en sécurité ici. Installez-vous et laissez vos yeux se fermer."],
+  [.06,"Nommez intérieurement cinq sons que vous entendez autour de vous, sans les juger."],
+  [.18,"Sentez les points de contact de votre corps : le siège, le sol, vos mains."],
+  [.3,"Inspirez sur quatre temps. Retenez un instant. Expirez longuement sur six temps."],
+  [.45,"L'anxiété est une vague. Elle monte, atteint un sommet, puis redescend toujours."],
+  [.6,"Posez une main sur votre poitrine. Sentez sa chaleur. Vous prenez soin de vous."],
+  [.75,"Dites-vous : ce que je ressens est passager. Je peux le laisser passer."],
+  [.9,"Revenez doucement, et gardez ce calme pour la suite de votre journée."]]},
+ {id:'focus',t:'Pause concentration',c:'Focus',m:3,d:'Compter ses expirations pour retrouver un esprit clair.',s:[
+  [0,"Posez ce que vous faites. Trois minutes rien que pour vous."],
+  [.1,"Fixez votre attention sur l'air qui entre par vos narines."],
+  [.35,"Comptez vos expirations de un à dix. Si vous perdez le fil, recommencez à un, sans jugement."],
+  [.7,"Élargissez votre attention à tout le corps : assis, stable, présent."],
+  [.9,"Ouvrez les yeux. Reprenez votre tâche avec cette clarté."]]},
+ {id:'matin',t:'Ancrage du matin',c:'Énergie',m:5,d:'Choisir l’intention de sa journée en quelques respirations.',s:[
+  [0,"Bonjour. Asseyez-vous et sentez vos pieds bien posés au sol."],
+  [.08,"Inspirez en ouvrant la poitrine, comme si vous accueilliez la journée."],
+  [.25,"Expirez ce qui reste de la nuit. Encore une fois : inspirez, expirez."],
+  [.42,"Posez-vous une question simple : comment ai-je envie de me sentir aujourd'hui ?"],
+  [.6,"Choisissez un mot. Calme, énergie, confiance. Répétez-le intérieurement à chaque inspiration."],
+  [.8,"Visualisez un moment de votre journée qui se passe bien, avec ce mot comme guide."],
+  [.93,"Une dernière grande inspiration. Vous êtes prêt. Ouvrez les yeux."]]},
+ {id:'nuit',t:"S'endormir en douceur",c:'Sommeil',m:15,d:'Un lac au crépuscule, un compte à rebours, et le sommeil qui vient.',s:[
+  [0,"Allongez-vous et éteignez la lumière. Laissez votre corps s'enfoncer dans le matelas."],
+  [.04,"Ralentissez votre respiration. Inspirez sur quatre temps, expirez sur huit."],
+  [.12,"Imaginez un lac calme au crépuscule. L'eau est lisse, l'air est tiède."],
+  [.24,"Chaque pensée de la journée est une feuille posée sur l'eau. Regardez-la s'éloigner."],
+  [.38,"Vos paupières sont lourdes. Vos bras sont lourds. Vos jambes sont lourdes."],
+  [.52,"Comptez à rebours depuis cent, lentement, à chaque expiration. Si vous perdez le compte, peu importe."],
+  [.68,"Le lac s'assombrit, les étoiles apparaissent une à une. Tout est calme."],
+  [.84,"Il n'y a plus rien à faire. Seulement se reposer."],
+  [.95,"Laissez le sommeil venir à vous. Bonne nuit."]]},
+ {id:'grat',t:'Gratitude',c:'Bien-être',m:5,d:'Revisiter les petits moments agréables de la journée.',s:[
+  [0,"Installez-vous confortablement et prenez une respiration profonde."],
+  [.1,"Pensez à une personne qui compte pour vous. Voyez son visage, souriez-lui intérieurement."],
+  [.3,"Pensez à un petit moment agréable d'aujourd'hui. Un café, un rayon de soleil, un mot gentil."],
+  [.5,"Remarquez ce que ce souvenir fait naître dans votre poitrine. Restez avec cette sensation."],
+  [.7,"Remerciez votre corps, qui vous porte chaque jour."],
+  [.9,"Emportez cette gratitude avec vous. Ouvrez doucement les yeux."]]}
+];
+const byId=id=>SESS.find(s=>s.id===id);
+
+const QUOTES=[
+ ["Le calme n'est pas l'absence de tempête, c'est la paix au milieu d'elle.","Proverbe"],
+ ["Respirer, c'est revenir chez soi.","Thich Nhat Hanh (d'après)"],
+ ["Ce n'est pas le temps qui manque, c'est l'attention.","Souffle"],
+ ["Une expiration plus longue que l'inspiration ralentit le cœur.","Physiologie du souffle"],
+ ["Rien ne presse. Ce moment suffit.","Souffle"],
+ ["Là où va l'attention, va l'énergie.","Principe d'hypnose ericksonienne"],
+ ["Six respirations par minute, trois fois par jour : la règle du 365.","Cohérence cardiaque"]
+];
+
+/* ---------- Visages humeur ---------- */
+const MOODS=[{n:'Épuisé',c:'#A9B4D0'},{n:'Tendu',c:'#D99A8C'},{n:'Neutre',c:'#C9C28A'},{n:'Serein',c:'#86C2AC'},{n:'Radieux',c:'#E6BE85'}];
+function face(m,sz){const c=(m-3)*2.2;return `<svg viewBox="0 0 40 40" width="${sz}" height="${sz}" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="17" r="1.8" fill="currentColor"/><circle cx="26" cy="17" r="1.8" fill="currentColor"/><path d="M13 ${26-c*.3} Q20 ${26+c} 27 ${26-c*.3}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`}
+
+/* ---------- Navigation ---------- */
+let current='home';
+function go(v){
+  current=v;
+  document.querySelectorAll('.view').forEach(s=>s.hidden=s.dataset.view!==v);
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-current',t.dataset.go===v?'page':'false'));
+  if(v==='profile')renderProfile();
+  if(v==='home')renderHome();
+  if(v==='sounds')renderSounds();
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);if(g.classList.contains('qtile')&&g.dataset.go==='breathe'){selectPat('coh');selectDur(1)}}});
+
+/* ---------- Stats ---------- */
+function streak(){const days=new Set(S.log.map(l=>l.d));let n=0,i=days.has(today())?0:1;while(days.has(key(daysBack(i)))){n++;i++}return n}
+function minsOn(k){return S.log.filter(l=>l.d===k).reduce((a,l)=>a+l.min,0)}
+function weekMins(){let t=0;for(let i=0;i<7;i++)t+=minsOn(key(daysBack(i)));return Math.round(t)}
+function totalMins(){return Math.round(S.log.reduce((a,l)=>a+l.min,0))}
+function logSession(min,kind,title){if(min<.25)return;S.log.push({d:today(),min:Math.round(min*10)/10,kind,title,at:Date.now()});if(S.log.length>500)S.log=S.log.slice(-500);save();renderHome()}
+
+/* ---------- Accueil ---------- */
+function renderHome(){
+  const h=new Date().getHours();
+  const g=h<5?'Belle nuit':h<12?'Bonjour':h<18?'Bon après-midi':h<22?'Bonsoir':'Belle nuit';
+  $('#greet').innerHTML=esc(g)+(S.name?', <em>'+esc(S.name)+'</em>':'');
+  $('#today').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  const doy=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/864e5);
+  const q=QUOTES[doy%QUOTES.length];$('#quote').innerHTML=esc(q[0])+'<small>'+esc(q[1])+'</small>';
+  const m=S.moods[today()];
+  $('#faces').innerHTML=MOODS.map((x,i)=>`<button class="face" style="--c:${x.c}" data-m="${i+1}" aria-pressed="${m===i+1}">${face(i+1,34)}${x.n}</button>`).join('');
+  const replies=['Journée lourde. On ralentit ensemble, sans exigence.','La tension est là. Quelques minutes peuvent la faire redescendre.','Un bon moment pour une courte pause d’attention.','Beau calme. Prolongez-le avec un moment de gratitude.','Quelle énergie. Ancrez-la pour qu’elle dure.'];
+  if(m)$('#moodReply').textContent=replies[m-1];
+  const s=recommend(m,h);
+  $('#recoLabel').textContent=h>=21||h<5?'Pour votre soirée':h<11?'Pour bien commencer':'Pour vous maintenant';
+  $('#reco').style.setProperty('--c',CAT[s.c]);
+  $('#reco').dataset.id=s.id;
+  $('#reco').innerHTML=`<div class="orb"></div><div><div class="meta">${esc(s.c)} · ${s.m} min</div><div class="t">${esc(s.t)}</div><div class="meta" style="margin-top:3px">${esc(s.d)}</div></div><div class="play-dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></div>`;
+  $('#hStreak').textContent=streak();$('#hWeek').textContent=weekMins();$('#hCount').textContent=S.log.length;
+}
+function recommend(m,h){
+  if(h>=21||h<5)return byId('nuit');
+  if(m===1)return byId('scan');if(m===2)return byId('anx');if(m===3)return byId('focus');if(m===5)return byId('matin');if(m===4)return byId('grat');
+  if(h<11)return byId('matin');
+  return S.log.length?byId('stress'):byId('debut');
+}
+$('#faces').addEventListener('click',e=>{const b=e.target.closest('.face');if(!b)return;S.moods[today()]=+b.dataset.m;save();renderHome()});
+$('#reco').addEventListener('click',()=>openPlayer($('#reco').dataset.id));
+
+/* ---------- Moteur audio ---------- */
+const E={ctx:null,master:null,bus:null,on:{},vol:{},bufs:{}};
+/* iPhone : un fichier audio muet joué en boucle fait passer le son en mode « lecture média »,
+   ce qui empêche le bouton silencieux de couper les sons générés. */
+let unlockEl=null,silentBytes=null;
+function silentWav(){if(silentBytes)return silentBytes;const sr=8000,n=sr,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++)v.setInt16(44+i*2,i%2?1:-1,true);return silentBytes=new Uint8Array(b)}
+function unlockMedia(){
+  try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}
+  if(unlockEl){if(unlockEl.paused)unlockEl.play().catch(()=>{});return}
+  try{const bytes=silentWav();let bin='';for(let i=0;i<bytes.length;i++)bin+=String.fromCharCode(bytes[i]);
+    unlockEl=document.createElement('audio');unlockEl.setAttribute('playsinline','');unlockEl.setAttribute('webkit-playsinline','');unlockEl.loop=true;unlockEl.preload='auto';
+    unlockEl.src='data:audio/wav;base64,'+btoa(bin);document.body.appendChild(unlockEl);
+    unlockEl.play().catch(()=>{try{unlockEl.src=URL.createObjectURL(new Blob([bytes],{type:'audio/wav'}));unlockEl.play().catch(()=>{})}catch(e){}});
+  }catch(e){}
+}
+function ac(){
+  unlockMedia();
+  if(!E.ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC){sndHint('Votre navigateur ne permet pas de générer les sons.');return null}
+    E.ctx=new AC();const lim=E.ctx.createDynamicsCompressor();lim.threshold.value=-4;lim.knee.value=2;lim.ratio.value=20;lim.attack.value=.003;lim.release.value=.25;lim.connect(E.ctx.destination);
+    E.master=E.ctx.createGain();E.master.gain.value=.7;E.master.connect(lim);
+    E.bus=E.ctx.createGain();E.bus.connect(E.master);E.rev=makeRev(E.master);
+    E.ctx.onstatechange=()=>{if(E.ctx.state!=='running'&&Object.keys(E.on).length)sndHint('Son en pause. Touchez un son pour le relancer.');else sndHint('')};}
+  if(E.ctx.state!=='running'){try{E.ctx.resume()}catch(e){}}
+  return E.ctx;
+}
+function sndHint(t){const el=document.getElementById('sndHint');if(el)el.textContent=t}
+/* Réveille l'audio dès le premier toucher sur la page */
+['touchend','pointerup','keydown'].forEach(ev=>document.addEventListener(ev,function once(){if(E.ctx&&E.ctx.state!=='running')E.ctx.resume();},{passive:true}));
+/* ===== Moteur génératif : rien ne boucle à l'oreille =====
+   - bruits de fond longs (11 à 17 s), raccord en fondu enchaîné sans creux ni clic
+   - modulations aléatoires lissées (pas d'oscillation régulière)
+   - événements (gouttes, vagues, crépitements, bols) tirés au hasard en continu */
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const rlog=(a,b)=>Math.exp(rnd(Math.log(a),Math.log(b)));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function panLR(p){const a=(p+1)*Math.PI/4;return[Math.cos(a),Math.sin(a)]}
+function filt(type,f,q){const n=E.ctx.createBiquadFilter();n.type=type;n.frequency.value=f;if(q!=null)n.Q.value=q;return n}
+function gain(v){const g=E.ctx.createGain();g.gain.value=v;return g}
+function panner(p){const n=E.ctx.createStereoPanner?E.ctx.createStereoPanner():E.ctx.createGain();if(n.pan)n.pan.value=p;return n}
+function chain(...n){for(let i=0;i<n.length-1;i++)n[i].connect(n[i+1]);return n[n.length-1]}
+
+function noiseBuf(kind,secs){
+  const key=kind+secs;if(E.bufs[key])return E.bufs[key];
+  const c=E.ctx,sr=c.sampleRate,n=Math.floor(secs*sr),x=Math.floor(.8*sr),b=c.createBuffer(2,n,sr);
+  for(let ch=0;ch<2;ch++){
+    const g=new Float32Array(n+x);let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0,br=0,hp=0,prev=0;
+    for(let i=0;i<n+x;i++){const w=Math.random()*2-1;let v;
+      if(kind==='white')v=w;
+      else if(kind==='pink'){b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8665*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;v=b0+b1+b2+b3+b4+b5+b6+w*.5362;b6=w*.115926}
+      else{br=br*.998+w*.05;hp=.9995*(hp+br-prev);prev=br;v=hp}
+      g[i]=v}
+    let s=0;for(let i=0;i<n+x;i++)s+=g[i]*g[i];const k=.25/Math.sqrt(s/(n+x));
+    const d=b.getChannelData(ch);
+    for(let i=0;i<n;i++){if(i<x){const a=i/x;d[i]=(g[i]*Math.sqrt(a)+g[n+i]*Math.sqrt(1-a))*k}else d[i]=g[i]*k}
+  }
+  return E.bufs[key]=b;
+}
+function loop(kind,secs,rate){const s=E.ctx.createBufferSource();s.buffer=noiseBuf(kind,secs);s.loop=true;if(rate)s.playbackRate.value=rate;s.start(E.ctx.currentTime,Math.random()*secs*.9);return s}
+
+/* Banques de sons courts pré-calculés (gouttes, crépitements), chacun placé dans l'espace stéréo */
+function jbp(x,sr,f,q){const w=2*Math.PI*Math.min(f,sr*.45)/sr,al=Math.sin(w)/(2*q),a0=1+al,b0=al/a0,b2=-al/a0,a1=-2*Math.cos(w)/a0,a2=(1-al)/a0;let x1=0,x2=0,y1=0,y2=0;
+  for(let i=0;i<x.length;i++){const xi=x[i],y=b0*xi+b2*x2-a1*y1-a2*y2;x2=x1;x1=xi;y2=y1;y1=y;x[i]=y}}
+function bank(name,count,secs,fill){
+  if(E.bufs[name])return E.bufs[name];const c=E.ctx,sr=c.sampleRate,arr=[];
+  for(let k=0;k<count;k++){const n=Math.floor(secs*sr),b=c.createBuffer(2,n,sr),L=b.getChannelData(0),R=b.getChannelData(1),m=new Float32Array(n);fill(m,sr);
+    let pk=0;for(let i=0;i<n;i++)pk=Math.max(pk,Math.abs(m[i]));const[gl,gr]=panLR(rnd(-.85,.85)),nn=pk?1/pk:0;
+    const f=Math.floor(.004*sr);for(let i=0;i<f;i++)m[n-1-i]*=i/f;
+    for(let i=0;i<n;i++){L[i]=m[i]*gl*nn;R[i]=m[i]*gr*nn}arr.push(b)}
+  return E.bufs[name]=arr;
+}
+const fillDrop=(m,sr)=>{const tau=rnd(.0015,.006)*sr;for(let i=0;i<m.length;i++)m[i]=(Math.random()*2-1)*Math.exp(-i/tau);jbp(m,sr,rlog(1400,6500),rnd(.9,2.8));const a=Math.floor(.0006*sr);for(let i=0;i<a;i++)m[i]*=i/a};
+const fillPlink=(m,sr)=>{const f0=rnd(1000,2400),k=rnd(8,22),tau=rnd(.005,.012)*sr;let ph=0;for(let i=0;i<m.length;i++){ph+=2*Math.PI*f0*(1+k*i/sr)/sr;m[i]=Math.sin(ph)*Math.exp(-i/tau)*Math.min(1,i/(.0008*sr))}};
+const fillCrackle=(m,sr)=>{const nc=1+Math.floor(Math.random()*4);for(let c=0;c<nc;c++){const st=Math.floor(rnd(0,.03)*sr),tau=rnd(.0002,.0012)*sr,a=rnd(.3,1);
+  for(let i=st;i<m.length;i++){const e=Math.exp(-(i-st)/tau);if(e<1e-4)break;m[i]+=(Math.random()*2-1)*a*e}}let p=0;for(let i=0;i<m.length;i++){const v=m[i];m[i]=v-.7*p;p=v}};
+const fillPop=(m,sr)=>{const f=rnd(110,300),tau=rnd(.008,.02)*sr;for(let i=0;i<m.length;i++)m[i]=Math.sin(2*Math.PI*f*i/sr)*Math.exp(-i/tau)*.7+(Math.random()*2-1)*Math.exp(-i/(.0005*sr))};
+function shot(buf,t,g,out,rate){const s=E.ctx.createBufferSource();s.buffer=buf;if(rate)s.playbackRate.value=rate;const n=E.ctx.createGain();n.gain.value=g;s.connect(n);n.connect(out);s.start(t);s.onended=()=>{s.disconnect();n.disconnect()}}
+
+/* Modulations aléatoires lissées et planification d'événements */
+function jsw(lo,hi,tmin,tmax){let t0=0,t1=0,v0=rnd(lo,hi),v1=rnd(lo,hi);return t=>{if(!t1){t0=t;t1=t+rnd(tmin,tmax)}while(t>=t1){t0=t1;t1=t0+rnd(tmin,tmax);v0=v1;v1=rnd(lo,hi)}const a=(t-t0)/(t1-t0);return v0+(v1-v0)*(.5-.5*Math.cos(Math.PI*a))}}
+function pw(param,lo,hi,tmin,tmax,log,pk){const f=pk||(()=>log?rlog(lo,hi):rnd(lo,hi));let next=0;return{tick(t){if(!next){next=E.ctx.currentTime;param.setValueAtTime(f(),next)}while(next<t){const d=rnd(tmin,tmax);param.setTargetAtTime(f(),next,d/2.5);next+=d}}}}
+function poisson(rate,fire){let next=0;return{tick(t){if(!next)next=E.ctx.currentTime+.1;while(next<t){fire(next);next+=-Math.log(1-Math.random()*.9999)/Math.max(.01,rate(next))}}}}
+function every(tmin,tmax,fire,first){let next=0;return{tick(t){if(!next)next=E.ctx.currentTime+(first||.1);while(next<t){fire(next);next+=rnd(tmin,tmax)}}}}
+function voice(){return{srcs:[],ticks:[],tick(t){this.ticks.forEach(x=>x.tick(t))},stop(){this.srcs.forEach(s=>{try{s.stop()}catch(e){}})}}}
+
+/* Réverbération naturelle (salle douce, 2,5 s) */
+function makeRev(dest){const c=E.ctx,sr=c.sampleRate,len=Math.floor(2.6*sr),b=c.createBuffer(2,len,sr);
+  for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);let lp=0;for(let i=0;i<len;i++){const t=i/sr,k=Math.min(.92,.2+t*.4);lp+=(1-k)*((Math.random()*2-1)-lp);d[i]=t<.014?0:lp*Math.exp(-t/.45)}}
+  const cv=c.createConvolver();cv.buffer=b;const g=gain(.55);cv.connect(g);g.connect(dest);return cv}
+
+/* Vague : houle qui monte, déferle, puis écume qui se retire */
+function wave(t,out,amp){const c=E.ctx,rise=rnd(2.2,4),fall=rnd(5,8.5),dur=rise+fall,N=96;
+  const s=c.createBufferSource();s.buffer=noiseBuf('pink',13.7);s.loop=true;s.start(t,rnd(0,13));s.stop(t+dur+.1);
+  const lp=filt('lowpass',200,.4),g=gain(0),p=panner(rnd(-.45,.45));
+  const env=new Float32Array(N),cut=new Float32Array(N),pk=rise/dur,fc=rnd(1300,2600);
+  for(let i=0;i<N;i++){const x=i/(N-1);let e;if(x<pk)e=Math.pow(Math.sin(x/pk*Math.PI/2),2.4);else{const u=(x-pk)/(1-pk);e=Math.exp(-u*3)*(1-u)}env[i]=e*amp;cut[i]=160+(fc-160)*Math.pow(e,1.4)}
+  g.gain.setValueCurveAtTime(env,t,dur);lp.frequency.setValueCurveAtTime(cut,t,dur);chain(s,lp,g,p,out);
+  const ft=t+rise*.8,fd=rnd(3.5,6),f=c.createBufferSource();f.buffer=noiseBuf('white',9.3);f.loop=true;f.start(ft,rnd(0,9));f.stop(ft+fd+.1);
+  const fh=filt('highpass',rnd(1800,3200),.5),fl=filt('lowpass',rnd(7000,10000),.5),fg=gain(0),fe=new Float32Array(N);
+  for(let i=0;i<N;i++){const x=i/(N-1);fe[i]=amp*.22*Math.min(1,x*7)*Math.exp(-x*2.6)*(1-x)}
+  fg.gain.setValueCurveAtTime(fe,ft,fd);chain(f,fh,fl,fg,p);
+  let left=2;const done=()=>{if(--left===0)[s,lp,g,p,f,fh,fl,fg].forEach(n=>n.disconnect())};s.onended=done;f.onended=done}
+
+/* Bol chantant : partiels inharmoniques, battements lents, longue résonance */
+function bowlStrike(t,out,level,f0){const c=E.ctx,P=[[1,1,18],[2.73,.42,11],[5.15,.2,6.5],[8.35,.09,3.8],[12.2,.035,2.2]],nodes=[];
+  P.forEach(([r,a,d])=>{const beat=rnd(.35,1.3);[-1,1].forEach(sg=>{const o=c.createOscillator(),g=c.createGain(),p=panner(sg*.35);
+    o.frequency.value=f0*r+sg*beat/2;g.gain.value=0;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(a*level*.35,t+.01+r*.002);g.gain.setTargetAtTime(0,t+.012,d/4.6);
+    o.connect(g);g.connect(p);p.connect(out);o.start(t);o.stop(t+d*2.3);nodes.push(o,g,p)})});
+  const n=c.createBufferSource();n.buffer=noiseBuf('white',9.3);const nf=filt('bandpass',f0*7,1.5),ng=gain(0);ng.gain.setValueAtTime(level*.25,t);ng.gain.setTargetAtTime(0,t+.002,.008);chain(n,nf,ng,out);n.start(t,rnd(0,8));n.stop(t+.15);
+  setTimeout(()=>nodes.forEach(x=>{try{x.disconnect()}catch(e){}}),45000)}
+
+const SOUNDS={
+ pluie:{n:'Pluie',c:'#8EB6D1',lvl:1.5,rev:.18,ic:'<path d="M7 15a4 4 0 0 1-.6-8A5.5 5.5 0 0 1 17 7.5a3.8 3.8 0 0 1 .4 7.5"/><path d="M9 17l-1 3M13 17l-1 3M17 17l-1 3"/>',
+  make(out){const v=voice(),inten=jsw(.45,1,10,28);
+   const w=loop('pink',13.7),hp=filt('highpass',380,.5),lp=filt('lowpass',4200,.4),wg=gain(.5);chain(w,hp,lp,wg,out);v.srcs.push(w);
+   v.ticks.push(pw(lp.frequency,2800,5200,6,16,true),pw(wg.gain,.32,.6,8,22));
+   const h=loop('white',9.3),hb=filt('bandpass',7500,.7),hg=gain(.025);chain(h,hb,hg,out);v.srcs.push(h);
+   const b=loop('brown',17.1),bl=filt('lowpass',320,.5),bg=gain(.18);chain(b,bl,bg,out);v.srcs.push(b);v.ticks.push(pw(bg.gain,.1,.24,10,25));
+   const drops=bank('drop',48,.04,fillDrop),plinks=bank('plink',24,.05,fillPlink),dg=gain(1);dg.connect(out);
+   v.ticks.push(poisson(t=>16+44*inten(t),t=>shot(pick(drops),t,rlog(.015,.22),dg,rnd(.85,1.2))));
+   v.ticks.push(poisson(t=>.8+2.5*inten(t),t=>shot(pick(plinks),t,rlog(.015,.07),dg,rnd(.8,1.25))));
+   return v}},
+ ocean:{n:'Océan',c:'#86C2AC',lvl:1.78,rev:.12,ic:'<path d="M3 10c2 0 2-2 4.5-2S10 10 12 10s2.5-2 4.5-2S19 10 21 10M3 15c2 0 2-2 4.5-2s2.5 2 4.5 2 2.5-2 4.5-2 2.5 2 4.5 2"/>',
+  make(out){const v=voice();
+   const b=loop('brown',17.1),bl=filt('lowpass',240,.5),bg=gain(.25);chain(b,bl,bg,out);v.srcs.push(b);v.ticks.push(pw(bg.gain,.14,.3,8,20));
+   const d=loop('pink',13.7),dl=filt('lowpass',700,.4),dg=gain(.05);chain(d,dl,dg,out);v.srcs.push(d);v.ticks.push(pw(dg.gain,.03,.08,6,15));
+   v.ticks.push(every(5.5,11.5,t=>wave(t,out,rnd(.5,1)),.2));
+   return v}},
+ vent:{n:'Vent',c:'#A9B4D0',lvl:2.07,rev:.1,ic:'<path d="M3 9h11a3 3 0 1 0-3-3M3 13h15a3 3 0 1 1-3 3M3 17h6"/>',
+  make(out){const v=voice(),gust=gain(.6);gust.connect(out);v.ticks.push(pw(gust.gain,.3,1,3,9));
+   [-.6,.6].forEach(side=>{const s=loop('pink',13.7,rnd(.97,1.03)),f=filt('bandpass',400,1),g=gain(.8),p=panner(side);chain(s,f,g,p,gust);v.srcs.push(s);
+     v.ticks.push(pw(f.frequency,220,850,2.5,7,true),pw(f.Q,.7,2.2,4,10),pw(g.gain,.4,1,2,6))});
+   const r=loop('brown',17.1),rl=filt('lowpass',150,.6),rg=gain(.45);chain(r,rl,rg,gust);v.srcs.push(r);
+   const wh=loop('pink',13.7),wf=filt('bandpass',900,14),wg=gain(0);chain(wh,wf,wg,gust);v.srcs.push(wh);
+   v.ticks.push(pw(wf.frequency,650,1300,3,8,true),pw(wg.gain,0,1,4,10,false,()=>Math.random()<.5?0:rnd(.5,1.6)));
+   return v}},
+ feu:{n:'Feu de bois',c:'#E6BE85',lvl:2.4,rev:.08,ic:'<path d="M12 21c-4 0-6.5-2.6-6.5-6 0-3.6 3-5.5 3.5-9 2 1.3 3 3 3 5 1-1 1.6-2.2 1.7-3.6C16 9.5 18.5 12 18.5 15c0 3.4-2.5 6-6.5 6Z"/>',
+  make(out){const v=voice(),heat=jsw(.35,1,6,18);
+   const r=loop('brown',17.1),rl=filt('lowpass',220,.5),rg=gain(.55);chain(r,rl,rg,out);v.srcs.push(r);v.ticks.push(pw(rg.gain,.35,.7,2,6));
+   const h=loop('pink',13.7),hb=filt('bandpass',1800,.7),hg=gain(.05);chain(h,hb,hg,out);v.srcs.push(h);v.ticks.push(pw(hg.gain,.015,.06,1.5,5));
+   const cr=bank('crackle',60,.06,fillCrackle),pops=bank('pop',16,.1,fillPop),cg=gain(1);cg.connect(out);
+   v.ticks.push(poisson(t=>1.5+6*heat(t),t=>{const n=Math.random()<.12?Math.floor(rnd(3,9)):1;for(let k=0;k<n;k++)shot(pick(cr),t+(k?rnd(0,.35):0),rlog(.03,.32),cg,rnd(.7,1.3))}));
+   v.ticks.push(poisson(t=>.1+.2*heat(t),t=>shot(pick(pops),t,rnd(.12,.35),cg,rnd(.8,1.2))));
+   return v}},
+ bol:{n:'Bol tibétain',c:'#C9C28A',lvl:0.94,rev:.55,ic:'<path d="M3.5 11h17a8.5 8.5 0 0 1-17 0Z"/><path d="M9 20h6"/>',
+  make(out){const v=voice();v.ticks.push(every(15,26,t=>{const small=Math.random()<.22;bowlStrike(t,out,rnd(.6,1)*(small?.55:1),small?293.7:196)},.3));return v}},
+ brun:{n:'Bruit brun',c:'#D99A8C',lvl:0.89,rev:0,ic:'<path d="M3 12h2l2-5 3 10 3-12 3 12 2-5h3"/>',
+  make(out){const v=voice();const s=loop('brown',17.1),l=filt('lowpass',650,.5),g=gain(1);chain(s,l,g,out);v.srcs.push(s);v.ticks.push(pw(l.frequency,500,780,10,25,true));
+   const s2=loop('pink',13.7),l2=filt('lowpass',1200,.5),g2=gain(.07);chain(s2,l2,g2,out);v.srcs.push(s2);return v}}
+};
+
+function target(id){const v=E.vol[id]??.6;return SOUNDS[id].lvl*v*v}
+function ensureTimer(){if(E.timer)return;E.timer=setInterval(()=>{if(!E.ctx)return;const ids=Object.keys(E.on);if(!ids.length){clearInterval(E.timer);E.timer=null;return}
+  const t=E.ctx.currentTime+2.5;ids.forEach(id=>{try{E.on[id].v.tick(t)}catch(e){}})},250)}
+function sStart(id){if(E.on[id]||!ac())return;const c=E.ctx,now=c.currentTime,ch=gain(0),snd=gain(SOUNDS[id].rev);ch.connect(E.bus);ch.connect(snd);snd.connect(E.rev);
+  const v=SOUNDS[id].make(ch);ch.gain.setValueAtTime(0,now);ch.gain.setTargetAtTime(target(id),now,.9);v.tick(now+2.5);
+  E.on[id]={ch,snd,v};E.bus.gain.cancelScheduledValues(now);E.bus.gain.setTargetAtTime(1,now,.3);ensureTimer();refreshSnd(id)}
+function sStop(id){const o=E.on[id];if(!o)return;delete E.on[id];const now=E.ctx.currentTime;o.ch.gain.cancelScheduledValues(now);o.ch.gain.setValueAtTime(o.ch.gain.value,now);o.ch.gain.setTargetAtTime(0,now,.5);
+  setTimeout(()=>{o.v.stop();o.ch.disconnect();o.snd.disconnect()},4000);refreshSnd(id)}
+function sVol(id,v){E.vol[id]=v;const o=E.on[id];if(o){const now=E.ctx.currentTime;o.ch.gain.cancelScheduledValues(now);o.ch.gain.setValueAtTime(o.ch.gain.value,now);o.ch.gain.setTargetAtTime(target(id),now,.08)}}
+function strike(out,level,f0){if(!E.ctx)return;const g=gain(1),r=gain(.4);g.connect(out);g.connect(r);r.connect(E.rev);bowlStrike(E.ctx.currentTime+.03,g,level*.6,f0||196);setTimeout(()=>{g.disconnect();r.disconnect()},32000)}
+function tone(f){if(!S.tone||!ac())return;const c=E.ctx,t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.08,t+.05);g.gain.exponentialRampToValueAtTime(.0001,t+1.4);o.connect(g);g.connect(E.master);o.start(t);o.stop(t+1.5)}
+
+/* ---------- Sons (vue) ---------- */
+function isOn(id){return !!E.on[id]||(N.on&&N.mix&&id in N.mix)}
+function renderSounds(){
+  $('#sgrid').innerHTML=Object.entries(SOUNDS).map(([id,s])=>`<div class="snd${isOn(id)?' on':''}" id="snd-${id}" style="--c:${s.c}">
+   <button class="head" data-snd="${id}" aria-pressed="${isOn(id)}"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${s.ic}</svg></span><span class="bars" aria-hidden="true"><i></i><i></i><i></i></span></button>
+   <div><div class="nm">${s.n}</div><div class="st">${stLabel(id)}</div></div>
+   <input type="range" id="vol-${id}" min="0" max="1" step="0.01" value="${E.vol[id]??.6}" aria-label="Volume ${s.n}" ${isOn(id)?'':'disabled'}></div>`).join('');
+  renderNight();
+}
+function stLabel(id){return N.on&&N.mix&&id in N.mix?'Mode nuit':E.on[id]?'En lecture':'Touchez pour écouter'}
+function refreshSnd(id){const el=$('#snd-'+id);if(!el)return;const on=isOn(id);el.classList.toggle('on',on);el.querySelector('.head').setAttribute('aria-pressed',on);
+  el.querySelector('.st').textContent=stLabel(id);el.querySelector('input').disabled=!on;renderNight()}
+$('#sgrid').addEventListener('click',e=>{const b=e.target.closest('[data-snd]');if(!b)return;const id=b.dataset.snd;
+  if(N.on){nightStop(true);if(E.on[id])sStop(id);else sStart(id);return}
+  E.on[id]?sStop(id):sStart(id)});
+$('#sgrid').addEventListener('input',e=>{if(e.target.type!=='range')return;const id=e.target.id.slice(4);if(N.on)nightStop(true);sVol(id,+e.target.value)});
+const PRESETS=[{n:'Cabane sous la pluie',d:'Pluie et feu de bois',s:{pluie:.6,feu:.5}},{n:'Bord de mer la nuit',d:'Océan et vent léger',s:{ocean:.65,vent:.35}},{n:'Temple',d:'Bol tibétain sur bruit brun doux',s:{bol:.65,brun:.35}}];
+$('#presets').innerHTML=PRESETS.map((p,i)=>`<button class="preset" data-p="${i}"><div><b>${p.n}</b><br><span>${p.d}</span></div><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></button>`).join('');
+$('#presets').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;const p=PRESETS[+b.dataset.p];if(N.on)nightStop(false);
+  Object.keys(E.on).forEach(id=>{if(!(id in p.s))sStop(id)});Object.entries(p.s).forEach(([id,v])=>{E.vol[id]=v;if(E.on[id])sVol(id,v);else sStart(id)});renderSounds()});
+$('#stopAll').addEventListener('click',()=>{if(N.on)nightStop(false);Object.keys(E.on).forEach(sStop);setTimer(0);renderSounds()});
+let T={end:0,iv:null,sel:0};
+$('#stimer').innerHTML=[0,15,30,60].map(m=>`<button class="chip" data-t="${m}" aria-pressed="${m===0}">${m?m+' min':'Désactivé'}</button>`).join('');
+$('#stimer').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)setTimer(+b.dataset.t)});
+function timerChips(m){document.querySelectorAll('#stimer .chip').forEach(c=>c.setAttribute('aria-pressed',+c.dataset.t===m))}
+function setTimer(m){T.sel=m;clearInterval(T.iv);timerChips(m);
+  if(!m){T.end=0;$('#timerline').textContent='';if(N.on)nightTimerChanged();return}
+  T.end=Date.now()+m*60000;if(N.on)nightTimerChanged();
+  const up=()=>{const left=T.end-Date.now();
+    if(N.on){$('#timerline').textContent=left>0?'Arrêt en fondu vers '+new Date(T.end+NIGHT_LOOP*1000).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'Fondu en cours… bonne nuit.';return}
+    if(left<=0){clearInterval(T.iv);if(E.ctx){E.bus.gain.setTargetAtTime(0,E.ctx.currentTime,6)}setTimeout(()=>{Object.keys(E.on).forEach(sStop);if(E.ctx)E.bus.gain.value=1},25000);
+      $('#timerline').textContent='Fondu en cours… bonne nuit.';T.sel=0;timerChips(0);return}
+    $('#timerline').textContent='Arrêt en fondu dans '+Math.ceil(left/60000)+' min';};up();T.iv=setInterval(up,10000)}
+
+/* ---------- Mode nuit : le mélange devient un fichier audio lu comme de la musique ----------
+   Le moteur en direct s'arrête quand l'iPhone se verrouille ; un fichier audio, lui, continue.
+   On calcule 3 minutes du mélange, raccordées en fondu pour boucler sans coupure. */
+const NIGHT_LOOP=180,NIGHT_SR=32000,NIGHT_X=5;
+const N={on:false,busy:false,mix:null,el:null,urlA:null,urlB:null,chA:null,final:false,last:0};
+async function renderMix(mix,secs,prog){
+  const tot=secs+NIGHT_X,off=new OfflineAudioContext(2,Math.ceil(NIGHT_SR*tot),NIGHT_SR),keep={ctx:E.ctx,bufs:E.bufs,rev:E.rev};
+  E.ctx=off;E.bufs={};
+  try{const lim=off.createDynamicsCompressor();lim.threshold.value=-4;lim.knee.value=2;lim.ratio.value=20;lim.attack.value=.003;lim.release.value=.25;lim.connect(off.destination);
+    const master=gain(.7);master.connect(lim);E.rev=makeRev(master);
+    var voices=[],offBufs=E.bufs,offRev=E.rev;
+    for(const id in mix){const v=mix[id],ch=gain(SOUNDS[id].lvl*v*v),s=gain(SOUNDS[id].rev);ch.connect(master);ch.connect(s);s.connect(E.rev);const vc=SOUNDS[id].make(ch);vc.tick(2.5);voices.push(vc)}}
+  finally{E.ctx=keep.ctx;E.bufs=keep.bufs;E.rev=keep.rev}
+  /* Calcul par tranches de 2 s : on ne crée les gouttes et crépitements qu'au fur et à mesure */
+  for(let t=2;t<tot;t+=2){off.suspend(t).then(()=>{const k={ctx:E.ctx,bufs:E.bufs,rev:E.rev};E.ctx=off;E.bufs=offBufs;E.rev=offRev;
+    try{voices.forEach(v=>v.tick(Math.min(tot,t+2.5)))}catch(e){}finally{E.ctx=k.ctx;E.bufs=k.bufs;E.rev=k.rev}if(prog&&t%10===0)prog(t/tot);off.resume()})}
+  const buf=await off.startRendering(),n=secs*NIGHT_SR,x=NIGHT_X*NIGHT_SR,out=[];
+  for(let c=0;c<2;c++){const a=buf.getChannelData(c),o=new Float32Array(n);
+    for(let i=0;i<n;i++){if(i<x){const k=i/x;o[i]=a[i]*Math.sqrt(k)+a[n+i]*Math.sqrt(1-k)}else o[i]=a[i]}out.push(o)}
+  return out;
+}
+function wavURL(ch,fade){const n=ch[0].length,ab=new ArrayBuffer(44+n*4),dv=new DataView(ab),w=(o,s)=>{for(let i=0;i<s.length;i++)dv.setUint8(o+i,s.charCodeAt(i))};
+  w(0,'RIFF');dv.setUint32(4,36+n*4,true);w(8,'WAVE');w(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,2,true);dv.setUint32(24,NIGHT_SR,true);dv.setUint32(28,NIGHT_SR*4,true);dv.setUint16(32,4,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,n*4,true);
+  const fs=fade?n-90*NIGHT_SR:n;const L=ch[0],R=ch[1];let p=44;
+  for(let i=0;i<n;i++){let g=1;if(i>fs){const k=(i-fs)/(n-fs);g=Math.pow(1-k,2)}
+    dv.setInt16(p,Math.max(-1,Math.min(1,L[i]*g))*32767,true);dv.setInt16(p+2,Math.max(-1,Math.min(1,R[i]*g))*32767,true);p+=4}
+  return URL.createObjectURL(new Blob([ab],{type:'audio/wav'}))}
+function mixNames(){return Object.keys(N.mix||{}).map(id=>SOUNDS[id].n).join(' + ')}
+function renderNight(){const box=$('#night');if(!box)return;const live=Object.keys(E.on).length;
+  const btn=$('#nightBtn'),txt=$('#nightTxt');box.classList.toggle('active',N.on);
+  if(N.busy){btn.disabled=true;btn.textContent='Préparation…';if(!/%/.test(txt.textContent))txt.textContent='Calcul de votre ambiance…';return}
+  btn.disabled=false;
+  if(N.on){btn.textContent='Arrêter';txt.textContent='Actif · '+mixNames()+'. Vous pouvez verrouiller l’écran.';return}
+  btn.textContent='Lancer';btn.disabled=!live;
+  txt.textContent=live?'Transforme votre ambiance en piste audio qui continue écran verrouillé.':'Activez au moins un son, puis lancez le mode nuit pour verrouiller l’écran.'}
+async function nightStart(){
+  const mix={};Object.keys(E.on).forEach(id=>mix[id]=E.vol[id]??.6);if(!Object.keys(mix).length||N.busy)return;
+  N.busy=true;renderNight();
+  // Crée l'élément audio pendant le toucher, pour que l'iPhone autorise la lecture
+  if(!N.el){N.el=new Audio();N.el.setAttribute('playsinline','');N.el.preload='auto';
+    N.el.addEventListener('timeupdate',nightTick);N.el.addEventListener('ended',()=>{if(N.final)nightStop(false,true);else{N.el.currentTime=0;N.el.play().catch(()=>{})}});
+    N.el.addEventListener('pause',()=>{if(N.on&&!N.el.ended)$('#nightTxt').textContent='En pause · '+mixNames()+'.'});
+    N.el.addEventListener('play',()=>{if(N.on)renderNight()});}
+  N.el.src=silentURL();N.el.play().catch(()=>{});
+  try{await new Promise(r=>setTimeout(r,60));
+    const ch=await renderMix(mix,NIGHT_LOOP,f=>{$('#nightTxt').textContent='Calcul de votre ambiance… '+Math.round(f*100)+' %'});
+    nightRelease();N.chA=ch;N.urlA=wavURL(ch,false);N.mix=mix;N.final=false;N.last=0;
+    Object.keys(E.on).forEach(sStop);if(unlockEl)unlockEl.pause();
+    N.el.loop=true;N.el.src=N.urlA;N.on=true;await N.el.play();
+    if(T.end)nightTimerChanged();
+    if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title:mixNames(),artist:'Souffle · mode nuit',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]});
+      navigator.mediaSession.setActionHandler('play',()=>N.el.play());navigator.mediaSession.setActionHandler('pause',()=>N.el.pause());navigator.mediaSession.setActionHandler('stop',()=>nightStop(false))}catch(e){}}
+  }catch(e){N.on=false;sndHint('Le mode nuit n’a pas pu démarrer. Réessayez avec moins de sons.')}
+  N.busy=false;renderSounds();
+}
+function nightRelease(){[N.urlA,N.urlB].forEach(u=>{if(u)URL.revokeObjectURL(u)});N.urlA=N.urlB=null;N.chA=null}
+function nightStop(resume,silent){if(!N.on)return;const mix=N.mix;N.on=false;N.final=false;
+  if(N.el){N.el.pause();N.el.removeAttribute('src');N.el.load()}nightRelease();N.mix=null;
+  if('mediaSession' in navigator)try{navigator.mediaSession.metadata=null}catch(e){}
+  if(resume&&mix)Object.keys(mix).forEach(id=>{E.vol[id]=mix[id];sStart(id)});
+  if(silent){T.sel=0;T.end=0;timerChips(0);clearInterval(T.iv);$('#timerline').textContent=''}
+  renderSounds()}
+function nightTimerChanged(){N.final=false;if(!N.el)return;N.el.loop=true;
+  if(T.end&&N.chA&&!N.urlB){setTimeout(()=>{if(N.on&&N.chA&&!N.urlB)N.urlB=wavURL(N.chA,true)},50)}}
+/* À chaque tour de boucle : si le minuteur arrive à échéance avant le prochain tour, on passe sur la version qui s'éteint en fondu */
+function nightTick(){const ct=N.el.currentTime;
+  if(N.on&&T.end&&!N.final&&ct<N.last-1&&Date.now()+NIGHT_LOOP*1000>=T.end){N.final=true;N.el.loop=false;
+    if(N.urlB){N.el.src=N.urlB;N.el.play().catch(()=>{})}}
+  N.last=ct}
+let silentU=null;function silentURL(){if(!silentU)silentU=URL.createObjectURL(new Blob([silentWav()],{type:'audio/wav'}));return silentU}
+$('#nightBtn').addEventListener('click',()=>{if(N.on)nightStop(false);else{ac();nightStart()}});
+
+/* ---------- Respiration ---------- */
+const PATS=[
+ {id:'coh',n:'Cohérence cardiaque',s:'5 s · 5 s, 6 cycles/min',ph:[['Inspirez',5],['Expirez',5]]},
+ {id:'478',n:'Relaxation 4-7-8',s:'Pour trouver le sommeil',ph:[['Inspirez',4],['Retenez',7],['Expirez',8]]},
+ {id:'box',n:'Respiration carrée',s:'4·4·4·4, calme et focus',ph:[['Inspirez',4],['Retenez',4],['Expirez',4],['Bloquez',4]]},
+ {id:'46',n:'Apaisement',s:'Expiration longue 4·6',ph:[['Inspirez',4],['Expirez',6]]}
+];
+let B={pat:PATS[0],dur:3,run:false,iv:null,pi:0,pEnd:0,start:0,cycles:0};
+$('#pats').innerHTML=PATS.map(p=>`<button class="pat" data-pat="${p.id}" aria-pressed="${p.id==='coh'}"><b>${p.n}</b><span>${p.s}</span></button>`).join('');
+$('#bdur').innerHTML=[1,3,5,10].map(m=>`<button class="chip" data-d="${m}" aria-pressed="${m===3}">${m} min</button>`).join('');
+function selectPat(id){if(B.run)stopBreath();B.pat=PATS.find(p=>p.id===id);document.querySelectorAll('.pat').forEach(b=>b.setAttribute('aria-pressed',b.dataset.pat===id))}
+function selectDur(m){if(B.run)stopBreath();B.dur=m;document.querySelectorAll('#bdur .chip').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===m))}
+$('#pats').addEventListener('click',e=>{const b=e.target.closest('[data-pat]');if(b)selectPat(b.dataset.pat)});
+$('#bdur').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(b)selectDur(+b.dataset.d)});
+const sw=$('#btone');sw.setAttribute('aria-checked',S.tone);sw.addEventListener('click',()=>{S.tone=!S.tone;sw.setAttribute('aria-checked',S.tone);save()});
+function phase(i){
+  const [name,sec]=B.pat.ph[i];B.pi=i;B.pEnd=performance.now()+sec*1000;
+  const c=$('#bcircle');c.style.transitionDuration=sec+'s';
+  if(name==='Inspirez'){c.style.transform='scale(1)';tone(396)}else if(name==='Expirez'){c.style.transform='scale(.55)';tone(264)}else tone(330);
+  $('#bphase').textContent=name;
+}
+function startBreath(){ac();B.run=true;B.start=performance.now();B.cycles=0;$('#bstart').textContent='Arrêter';wake(true);phase(0);
+  B.iv=setInterval(()=>{const now=performance.now(),el=(now-B.start)/1000,tot=B.dur*60;
+    $('#bprog').style.strokeDashoffset=295.3*(1-Math.min(1,el/tot));
+    $('#bcount').textContent=Math.max(1,Math.ceil((B.pEnd-now)/1000))+' · cycle '+(B.cycles+1);
+    if(now>=B.pEnd){let n=B.pi+1;if(n>=B.pat.ph.length){n=0;B.cycles++;if(el>=tot-1){finishBreath();return}}phase(n)}},100)}
+function stopBreath(done){clearInterval(B.iv);const el=(performance.now()-B.start)/60000;if(B.run)logSession(el,'Respiration',B.pat.n);B.run=false;wake(false);
+  $('#bstart').textContent='Recommencer';const c=$('#bcircle');c.style.transitionDuration='1.2s';c.style.transform='scale(.55)';
+  $('#bphase').textContent=done?'Bravo':'En pause';$('#bcount').textContent=done?B.cycles+' cycles complétés':'Touchez « Recommencer »';$('#bprog').style.strokeDashoffset=done?0:295.3}
+function finishBreath(){stopBreath(true);if(E.ctx)strike(E.master,.5,220)}
+$('#bstart').addEventListener('click',()=>B.run?stopBreath():startBreath());
+
+/* ---------- Méditer ---------- */
+const cats=['Tout',...new Set(SESS.map(s=>s.c))];let curCat='Tout';
+function renderList(){
+  $('#cats').innerHTML=cats.map(c=>`<button class="chip" data-cat="${c}" aria-pressed="${c===curCat}">${c}</button>`).join('');
+  $('#mlist').innerHTML=SESS.filter(s=>curCat==='Tout'||s.c===curCat).map(s=>`<button class="item" data-id="${s.id}" style="--c:${CAT[s.c]}"><div class="orb"></div><div><div class="t">${esc(s.t)}</div><div class="d">${esc(s.d)}</div></div><div class="dur">${s.m} min<br>${esc(s.c)}</div></button>`).join('');
+}
+$('#cats').addEventListener('click',e=>{const b=e.target.closest('[data-cat]');if(b){curCat=b.dataset.cat;renderList()}});
+$('#mlist').addEventListener('click',e=>{const b=e.target.closest('[data-id]');if(b)openPlayer(b.dataset.id)});
+
+/* ---------- Lecteur ---------- */
+let P={};let WL=null;
+async function wake(on){try{if(on&&!WL&&navigator.wakeLock){WL=await navigator.wakeLock.request('screen')}else if(!on&&WL){await WL.release();WL=null}}catch(e){WL=null}}
+let frVoice=null,frVoices=[];
+function vScore(x){let s=0;if(/premium/i.test(x.name))s+=6;if(/enhanced|amélior|neural|natural|naturel/i.test(x.name))s+=5;if(/Amélie|Audrey|Aurélie|Thomas|Marie|Daniel|Google/i.test(x.name))s+=1;if(/fr-FR/i.test(x.lang))s+=1;if(x.localService===false)s+=1;return s}
+function pickVoice(){if(!('speechSynthesis' in window))return;
+  frVoices=speechSynthesis.getVoices().filter(v=>/^fr/i.test(v.lang)).sort((a,b)=>vScore(b)-vScore(a));
+  frVoice=frVoices.find(v=>v.name===S.voiceName)||frVoices[0]||null;renderVoiceSel()}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;setTimeout(pickVoice,800)}
+let spTok=0;
+function speak(t,force){if((!P.voice&&!force)||!('speechSynthesis' in window))return;const tok=++spTok;
+  try{speechSynthesis.cancel()}catch(e){}
+  const parts=t.split(/(?<=[.?!…:;])\s+/).filter(Boolean);let i=0;
+  const next=()=>{if(tok!==spTok||i>=parts.length)return;try{const u=new SpeechSynthesisUtterance(parts[i++]);u.lang='fr-FR';if(frVoice)u.voice=frVoice;
+    u.rate=S.rate||.82;u.pitch=.97;u.volume=1;u.onend=()=>setTimeout(next,700);speechSynthesis.speak(u)}catch(e){}};
+  next()}
+function stopSpeak(){spTok++;if('speechSynthesis' in window)try{speechSynthesis.cancel()}catch(e){}}
+function renderVoiceSel(){const sel=document.getElementById('vsel');if(!sel)return;
+  if(!frVoices.length){sel.innerHTML='<option>Voix par défaut</option>';return}
+  sel.innerHTML=frVoices.map(v=>`<option value="${esc(v.name)}"${frVoice&&v.name===frVoice.name?' selected':''}>${esc(v.name)}${/premium|enhanced|amélior/i.test(v.name)?' ★':''}</option>`).join('')}
+const fmt=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const PLAY='<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>';
+const PAUSE='<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></svg>';
+const AMB=[['','Aucune'],['pluie','Pluie'],['ocean','Océan'],['feu','Feu'],['bol','Bol']];
+function openPlayer(id){
+  const s=byId(id);P={s,dur:s.m*60,el:0,run:false,last:0,si:0,voice:P.voice??true,amb:'',done:false};
+  const pl=$('#player');pl.style.setProperty('--c',CATHEX[s.c]);pl.classList.remove('run');
+  $('#pcat').textContent=s.c+' · '+s.m+' min';$('#ptitle').textContent=s.t;$('#pcap').textContent=s.d;
+  $('#pprog').setAttribute('stroke',CATHEX[s.c]);$('#pprog').style.strokeDashoffset=289;
+  $('#ptime').textContent=fmt(P.dur)+' restantes';$('#pplay').innerHTML=PLAY;$('#pvoice').setAttribute('aria-pressed',P.voice);
+  const defAmb=s.c==='Sommeil'?'pluie':s.c==='Anxiété'||s.c==='Stress'?'ocean':'';
+  $('#pamb').innerHTML=AMB.map(([k,n])=>`<button class="chip" data-a="${k}" aria-pressed="${k===defAmb}">${n}</button>`).join('');P.pendingAmb=defAmb;
+  pl.hidden=false;document.body.style.overflow='hidden';
+}
+function setAmb(k){if(P.amb&&P.amb!==k&&P.ambMine)sStop(P.amb);P.amb=k;P.ambMine=false;if(k&&!E.on[k]){E.vol[k]=E.vol[k]??.5;sStart(k);P.ambMine=true}
+  document.querySelectorAll('#pamb .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.a===k))}
+$('#pamb').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;if(P.run||P.el>0)setAmb(b.dataset.a);else{P.pendingAmb=b.dataset.a;document.querySelectorAll('#pamb .chip').forEach(c=>c.setAttribute('aria-pressed',c===b))}});
+function pTick(){const now=performance.now();if(P.run){P.el+=(now-P.last)/1000;P.last=now}
+  $('#pprog').style.strokeDashoffset=289*(1-Math.min(1,P.el/P.dur));$('#ptime').textContent=fmt(P.dur-P.el)+' restantes';
+  while(P.si<P.s.s.length&&P.el>=P.s.s[P.si][0]*P.dur){const t=P.s.s[P.si][1];const cap=$('#pcap');cap.style.opacity=0;setTimeout(()=>{cap.textContent=t;cap.style.opacity=1},350);speak(t);P.si++}
+  if(P.el>=P.dur)pFinish()}
+function pPlay(){
+  if(P.done){openPlayer(P.s.id);return}
+  if(P.run){P.run=false;clearInterval(P.iv);$('#pplay').innerHTML=PLAY;$('#player').classList.remove('run');if('speechSynthesis' in window)speechSynthesis.pause();wake(false);return}
+  ac();if(P.el===0&&P.pendingAmb!==undefined){setAmb(P.pendingAmb);strike(E.master,.45)}
+  if('speechSynthesis' in window&&speechSynthesis.paused)speechSynthesis.resume();
+  P.run=true;P.last=performance.now();$('#pplay').innerHTML=PAUSE;$('#player').classList.add('run');wake(true);pTick();P.iv=setInterval(pTick,250)}
+function pFinish(){P.run=false;P.done=true;clearInterval(P.iv);$('#player').classList.remove('run');wake(false);
+  if(E.ctx)strike(E.master,.6);logSession(P.dur/60,'Méditation',P.s.t);P.logged=true;
+  setTimeout(()=>{$('#pcap').textContent='Séance terminée. '+P.s.m+' minutes rien que pour vous.'},1500);$('#ptime').textContent='Série : '+streak()+(streak()>1?' jours':' jour');
+  $('#pplay').innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12a8 8 0 1 0 2.3-5.6L4 8.5M4 4v4.5h4.5"/></svg>'}
+function pClose(){clearInterval(P.iv);if(!P.logged&&P.el>30)logSession(P.el/60,'Méditation',P.s.t);if(P.amb&&P.ambMine)sStop(P.amb);
+  stopSpeak();wake(false);P.run=false;$('#player').hidden=true;document.body.style.overflow='';if(current==='sounds')renderSounds()}
+$('#pplay').addEventListener('click',pPlay);$('#pclose').addEventListener('click',pClose);
+$('#pback').addEventListener('click',()=>{if(P.done)return;P.el=Math.max(0,P.el-15);P.si=0;while(P.si<P.s.s.length&&P.el>=P.s.s[P.si][0]*P.dur)P.si++;if(P.si>0)$('#pcap').textContent=P.s.s[P.si-1][1];pTick()});
+$('#pvoice').addEventListener('click',()=>{P.voice=!P.voice;$('#pvoice').setAttribute('aria-pressed',P.voice);if(!P.voice)stopSpeak()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#player').hidden)pClose()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(P.run||B.run))wake(true)});
+
+/* ---------- Parcours ---------- */
+function renderProfile(){
+  $('#pStreak').textContent=streak();$('#pTotal').textContent=totalMins();$('#pCount').textContent=S.log.length;
+  const days=[...Array(7)].map((_,i)=>daysBack(6-i));const vals=days.map(d=>minsOn(key(d)));const max=Math.max(10,...vals);
+  $('#chart').innerHTML=days.map((d,i)=>`<div class="bar${i===6?' today':''}"><span class="v">${vals[i]?Math.round(vals[i]):''}</span><div class="b${vals[i]?'':' zero'}" style="height:${vals[i]?Math.max(6,vals[i]/max*100):2}%"></div><span class="dl">${d.toLocaleDateString('fr-FR',{weekday:'short'}).slice(0,3)}</span></div>`).join('');
+  $('#moodrow').innerHTML=days.map(d=>{const m=S.moods[key(d)];return `<div style="${m?'color:'+MOODS[m-1].c:''}" title="${m?MOODS[m-1].n:'Non renseigné'}">${m?face(m,24):'<svg width="24" height="24" viewBox="0 0 40 40"><circle cx="20" cy="20" r="3" fill="currentColor"/></svg>'}</div>`}).join('');
+  const h=S.log.slice(-6).reverse();
+  $('#hist').innerHTML=h.length?h.map(l=>`<div><b style="font-weight:500">${esc(l.title)}</b><span>${new Date(l.at||l.d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} · ${l.min} min</span></div>`).join(''):'<p class="empty">Vos séances apparaîtront ici. Commencez par une minute de respiration.</p>';
+  $('#pname').value=S.name||'';
+}
+$('#pname').addEventListener('input',e=>{S.name=e.target.value.trim();save()});
+$('#vsel').addEventListener('change',e=>{S.voiceName=e.target.value;frVoice=frVoices.find(v=>v.name===S.voiceName)||frVoice;save()});
+$('#vrate').value=S.rate||.82;$('#vrate').addEventListener('input',e=>{S.rate=+e.target.value;save()});
+$('#vtest').addEventListener('click',()=>speak("Installez-vous confortablement. Prenez une grande inspiration… et relâchez lentement.",true));
+renderVoiceSel();
+$('#resetZone').addEventListener('click',e=>{
+  if(e.target.id==='resetBtn'){$('#resetZone').innerHTML='<span>Tout effacer définitivement ?</span><button class="danger" id="resetYes">Oui, effacer</button><button class="link" id="resetNo">Annuler</button>'}
+  else if(e.target.id==='resetYes'){S={name:S.name,moods:{},log:[],tone:S.tone};save();$('#resetZone').innerHTML='<button class="danger" id="resetBtn">Effacer mes données</button>';renderProfile()}
+  else if(e.target.id==='resetNo'){$('#resetZone').innerHTML='<button class="danger" id="resetBtn">Effacer mes données</button>'}
+});
+
+renderHome();renderList();renderSounds();
+const h=(location.hash||'').slice(1);if(['breathe','meditate','sounds','profile'].includes(h))go(h);
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>
