@@ -624,6 +624,23 @@ function bowlStrike(t,out,level,f0){const c=E.ctx,P=[[1,1,18],[2.73,.42,11],[5.1
   const n=c.createBufferSource();n.buffer=noiseBuf('white',9.3);const nf=filt('bandpass',f0*7,1.5),ng=gain(0);ng.gain.setValueAtTime(level*.25,t);ng.gain.setTargetAtTime(0,t+.002,.008);chain(n,nf,ng,out);n.start(t,rnd(0,8));n.stop(t+.15);
   setTimeout(()=>nodes.forEach(x=>{try{x.disconnect()}catch(e){}}),45000)}
 
+/* Sons enregistrés : fichier décodé une seule fois, puis bouclé avec un fondu enchaîné de 5 s pour que le raccord ne s'entende pas */
+const FILES={},FILEBUF={};
+function seamless(c,b){const sr=b.sampleRate,nc=b.numberOfChannels,x=Math.floor(5*sr),cut=Math.floor(.05*sr),len=b.length-2*cut,n=len-x,o=c.createBuffer(nc,n,sr);
+  for(let ch=0;ch<nc;ch++){const a=b.getChannelData(ch).subarray(cut,cut+len),d=o.getChannelData(ch);
+    for(let i=0;i<n;i++){if(i<x){const k=i/x;d[i]=a[i]*Math.sqrt(k)+a[n+i]*Math.sqrt(1-k)}else d[i]=a[i]}}
+  return o}
+function loadFile(src){if(FILES[src])return FILES[src];const c=E.ctx;
+  return FILES[src]=fetch(src).then(r=>{if(!r.ok)throw new Error(r.status);return r.arrayBuffer()})
+    .then(ab=>new Promise((ok,ko)=>c.decodeAudioData(ab,ok,ko)))
+    .then(b=>{FILEBUF[src]=seamless(c,b);Object.keys(SOUNDS).forEach(id=>{if(SOUNDS[id].file===src)refreshSnd(id)});return FILEBUF[src]})
+    .catch(e=>{delete FILES[src];throw e})}
+function fileVoice(snd,out){const v=voice(),st=v.stop;v.stop=function(){v.dead=true;st.call(v)};
+  const play=b=>{if(v.dead)return;const s=E.ctx.createBufferSource();s.buffer=b;s.loop=true;s.connect(out);s.start(E.ctx.currentTime,Math.random()*b.duration);v.srcs.push(s)};
+  if(FILEBUF[snd.file])play(FILEBUF[snd.file]);
+  else loadFile(snd.file).then(play,()=>{if(!v.dead)sndHint('Le son « '+snd.n+' » n’a pas pu être chargé. Vérifiez votre connexion.')});
+  return v}
+
 const SOUNDS={
  pluie:{n:'Pluie',c:'#8EB6D1',lvl:1.5,rev:.18,ic:'<path d="M7 15a4 4 0 0 1-.6-8A5.5 5.5 0 0 1 17 7.5a3.8 3.8 0 0 1 .4 7.5"/><path d="M9 17l-1 3M13 17l-1 3M17 17l-1 3"/>',
   make(out){const v=voice(),inten=jsw(.45,1,10,28);
@@ -661,7 +678,9 @@ const SOUNDS={
   make(out){const v=voice();v.ticks.push(every(15,26,t=>{const small=Math.random()<.22;bowlStrike(t,out,rnd(.6,1)*(small?.55:1),small?293.7:196)},.3));return v}},
  brun:{n:'Bruit brun',c:'#D99A8C',lvl:0.89,rev:0,ic:'<path d="M3 12h2l2-5 3 10 3-12 3 12 2-5h3"/>',
   make(out){const v=voice();const s=loop('brown',17.1),l=filt('lowpass',650,.5),g=gain(1);chain(s,l,g,out);v.srcs.push(s);v.ticks.push(pw(l.frequency,500,780,10,25,true));
-   const s2=loop('pink',13.7),l2=filt('lowpass',1200,.5),g2=gain(.07);chain(s2,l2,g2,out);v.srcs.push(s2);return v}}
+   const s2=loop('pink',13.7),l2=filt('lowpass',1200,.5),g2=gain(.07);chain(s2,l2,g2,out);v.srcs.push(s2);return v}},
+ montagne:{n:'Montagne',c:'#B3A7D4',lvl:2,rev:.04,file:'montagne.mp3',ic:'<path d="M2.5 19.5 9 8.5l4.2 6.8 2.6-3.8 5.7 8Z"/><path d="M7.1 11.7l1.9 1.3 1.8-1.4"/>',
+  make(out){return fileVoice(this,out)}}
 };
 
 function target(id){const v=E.vol[id]??.6;return SOUNDS[id].lvl*v*v}
@@ -686,7 +705,7 @@ function renderSounds(){
    <input type="range" id="vol-${id}" min="0" max="1" step="0.01" value="${E.vol[id]??.6}" aria-label="Volume ${s.n}" ${isOn(id)?'':'disabled'}></div>`).join('');
   renderNight();
 }
-function stLabel(id){return N.on&&N.mix&&id in N.mix?'Mode nuit':E.on[id]?'En lecture':'Touchez pour écouter'}
+function stLabel(id){return N.on&&N.mix&&id in N.mix?'Mode nuit':E.on[id]?(SOUNDS[id].file&&!FILEBUF[SOUNDS[id].file]?'Chargement…':'En lecture'):'Touchez pour écouter'}
 function refreshSnd(id){const el=$('#snd-'+id);if(!el)return;const on=isOn(id);el.classList.toggle('on',on);el.querySelector('.head').setAttribute('aria-pressed',on);
   el.querySelector('.st').textContent=stLabel(id);el.querySelector('input').disabled=!on;renderNight()}
 $('#sgrid').addEventListener('click',e=>{const b=e.target.closest('[data-snd]');if(!b)return;const id=b.dataset.snd;
@@ -756,6 +775,7 @@ async function nightStart(){
     N.el.addEventListener('play',()=>{if(N.on)renderNight()});}
   N.el.src=silentURL();N.el.play().catch(()=>{});
   try{await new Promise(r=>setTimeout(r,60));
+    await Promise.all(Object.keys(mix).filter(id=>SOUNDS[id].file).map(id=>loadFile(SOUNDS[id].file)));
     const ch=await renderMix(mix,NIGHT_LOOP,f=>{$('#nightTxt').textContent='Calcul de votre ambiance… '+Math.round(f*100)+' %'});
     nightRelease();N.chA=ch;N.urlA=wavURL(ch,false);N.mix=mix;N.final=false;N.last=0;
     Object.keys(E.on).forEach(sStop);if(unlockEl)unlockEl.pause();
@@ -847,7 +867,7 @@ function renderVoiceSel(){const sel=document.getElementById('vsel');if(!sel)retu
 const fmt=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const PLAY='<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>';
 const PAUSE='<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></svg>';
-const AMB=[['','Aucune'],['pluie','Pluie'],['ocean','Océan'],['feu','Feu'],['bol','Bol']];
+const AMB=[['','Aucune'],['pluie','Pluie'],['ocean','Océan'],['feu','Feu'],['bol','Bol'],['montagne','Montagne']];
 function openPlayer(id){
   const s=byId(id);P={s,dur:s.m*60,el:0,run:false,last:0,si:0,voice:P.voice??true,amb:'',done:false};
   const pl=$('#player');pl.style.setProperty('--c',CATHEX[s.c]);pl.classList.remove('run');
