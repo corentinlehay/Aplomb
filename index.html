@@ -180,6 +180,14 @@ input[type=text]{background:var(--surface2);border:1px solid var(--line);border-
 .small .iconbtn[aria-pressed="true"]{background:var(--sage);color:var(--bg)}
 .amb{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 
+/* Accueil (première ouverture) */
+.welcome{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;padding:calc(env(safe-area-inset-top,0px) + 24px) 24px calc(env(safe-area-inset-bottom,0px) + 24px);overflow-y:auto}
+.welcome::before{content:"";position:fixed;inset:0;background:radial-gradient(55% 40% at 50% 30%,rgba(134,194,172,.18),transparent 70%);pointer-events:none}
+.wcard{position:relative;width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
+.wcard .orb{width:84px;height:84px;margin-bottom:6px}
+.wcard input{width:100%;text-align:center;font-size:17px}
+.wcard .btn{width:100%}
+
 @media (prefers-reduced-motion:reduce){
   .glow,.player.run .porb,.snd.on .bars i{animation:none}
   .bcircle{transition-duration:0s!important}
@@ -326,6 +334,18 @@ input[type=text]{background:var(--surface2);border:1px solid var(--line);border-
   </div>
 </nav>
 
+<div class="welcome" id="welcome" hidden>
+  <div class="wcard">
+    <div class="orb" style="--c:var(--sage)"></div>
+    <div class="eyebrow">Pour commencer</div>
+    <h1 style="margin:0">Bienvenue sur <em>Souffle</em></h1>
+    <p class="sub" style="margin:0">Comment souhaitez-vous que l'on vous appelle&nbsp;?</p>
+    <input type="text" id="wname" autocomplete="given-name" maxlength="24" placeholder="Votre prénom" aria-label="Votre prénom">
+    <button class="btn" id="wgo">Continuer</button>
+    <button class="link" id="wskip">Plus tard</button>
+  </div>
+</div>
+
 <div class="player" id="player" hidden>
   <div class="pin">
     <div class="ptop">
@@ -359,8 +379,10 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 
 /* ---------- Données ---------- */
 const KEY='souffle.v1';
-let S={name:'Coz',moods:{},log:[],tone:true};
+let S={name:'',moods:{},log:[],tone:true};
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
+/* Ancienne version : « Coz » était inscrit par défaut pour tout le monde. On l'efface tant que la personne n'a pas choisi son prénom. */
+if(!S.nameSet&&S.name==='Coz')S.name='';
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const today=()=>key(new Date());
@@ -765,9 +787,9 @@ function sStart(id){if(E.on[id]||!ac())return;
   if(SOUNDS[id].file&&!SBUF[id]){SWANT[id]=true;refreshSnd(id);loadSample(id).then(()=>{if(SWANT[id]){delete SWANT[id];sStart(id)}}).catch(()=>{delete SWANT[id];refreshSnd(id);sndHint('Impossible de charger « '+SOUNDS[id].n+' ». Vérifiez la connexion et réessayez.')});return}
   delete SWANT[id];const c=E.ctx,now=c.currentTime,ch=gain(0),snd=gain(SOUNDS[id].rev);ch.connect(E.bus);ch.connect(snd);snd.connect(E.rev);
   const v=SOUNDS[id].make(ch);ch.gain.setValueAtTime(0,now);ch.gain.setTargetAtTime(target(id),now,.9);v.tick(now+2.5);
-  E.on[id]={ch,snd,v};E.bus.gain.cancelScheduledValues(now);E.bus.gain.setTargetAtTime(1,now,.3);ensureTimer();refreshSnd(id)}
+  E.on[id]={ch,snd,v};E.bus.gain.cancelScheduledValues(now);E.bus.gain.setTargetAtTime(1,now,.3);ensureTimer();refreshSnd(id);listenTick()}
 function sStop(id){if(SWANT[id]){delete SWANT[id];refreshSnd(id)}const o=E.on[id];if(!o)return;delete E.on[id];const now=E.ctx.currentTime;o.ch.gain.cancelScheduledValues(now);o.ch.gain.setValueAtTime(o.ch.gain.value,now);o.ch.gain.setTargetAtTime(0,now,.5);
-  setTimeout(()=>{o.v.stop();o.ch.disconnect();o.snd.disconnect()},4000);refreshSnd(id)}
+  setTimeout(()=>{o.v.stop();o.ch.disconnect();o.snd.disconnect()},4000);refreshSnd(id);listenTick()}
 function sVol(id,v){E.vol[id]=v;const o=E.on[id];if(o){const now=E.ctx.currentTime;o.ch.gain.cancelScheduledValues(now);o.ch.gain.setValueAtTime(o.ch.gain.value,now);o.ch.gain.setTargetAtTime(target(id),now,.08)}}
 function strike(out,level,f0){if(!E.ctx)return;const g=gain(1),r=gain(.4);g.connect(out);g.connect(r);r.connect(E.rev);bowlStrike(E.ctx.currentTime+.03,g,level*.6,f0||196);setTimeout(()=>{g.disconnect();r.disconnect()},32000)}
 function tone(f){if(!S.tone||!ac())return;const c=E.ctx,t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;
@@ -799,7 +821,7 @@ let T={end:0,iv:null,sel:0};
 $('#stimer').innerHTML=[0,15,30,60].map(m=>`<button class="chip" data-t="${m}" aria-pressed="${m===0}">${m?m+' min':'Désactivé'}</button>`).join('');
 $('#stimer').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)setTimer(+b.dataset.t)});
 function timerChips(m){document.querySelectorAll('#stimer .chip').forEach(c=>c.setAttribute('aria-pressed',+c.dataset.t===m))}
-function setTimer(m){T.sel=m;clearInterval(T.iv);timerChips(m);
+function setTimer(m){T.sel=m;clearInterval(T.iv);timerChips(m);LS.cap=0;setTimeout(listenTick,0);
   if(!m){T.end=0;$('#timerline').textContent='';if(N.on)nightTimerChanged();return}
   T.end=Date.now()+m*60000;if(N.on)nightTimerChanged();
   const up=()=>{const left=T.end-Date.now();
@@ -857,19 +879,37 @@ async function nightStart(){
     const ch=await renderMix(mix,NIGHT_LOOP,f=>{$('#nightTxt').textContent='Calcul de votre ambiance… '+Math.round(f*100)+' %'});
     nightRelease();N.chA=ch;N.urlA=wavURL(ch,false);N.mix=mix;N.final=false;N.last=0;
     Object.keys(E.on).forEach(sStop);if(unlockEl)unlockEl.pause();
-    N.el.loop=true;N.el.src=N.urlA;N.on=true;await N.el.play();
+    N.el.loop=true;N.el.src=N.urlA;N.on=true;listenTick();await N.el.play();
     if(T.end)nightTimerChanged();
     if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title:mixNames(),artist:'Souffle · mode nuit',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]});
       navigator.mediaSession.setActionHandler('play',()=>N.el.play());navigator.mediaSession.setActionHandler('pause',()=>N.el.pause());navigator.mediaSession.setActionHandler('stop',()=>nightStop(false))}catch(e){}}
   }catch(e){N.on=false;sndHint('Le mode nuit n’a pas pu démarrer. Réessayez avec moins de sons.')}
   N.busy=false;renderSounds();
 }
+/* ---------- Parcours : le temps passé à écouter des sons est compté (à partir d'une minute) ----------
+   Une séance commence dès qu'un son joue et se termine quand plus rien ne joue.
+   Avec un minuteur, on ne compte pas au-delà de l'arrêt prévu, même si l'appli n'était pas ouverte à ce moment-là. */
+const LS={start:0,entry:null,cap:0};
+function listenIds(){const pl=!document.getElementById('player').hidden;
+  return [...new Set([...Object.keys(E.on),...(N.on&&N.mix?Object.keys(N.mix):[])])].filter(id=>!(pl&&P.ambMine&&id===P.amb))}
+function listenTick(){const ids=listenIds(),now=Date.now();
+  if(!ids.length&&N.busy)return;
+  if(ids.length&&!LS.start){LS.start=now;LS.entry=null;LS.cap=0}
+  if(!LS.start)return;
+  if(T.end)LS.cap=T.end+(N.on?NIGHT_LOOP*1000:25000);
+  const end=LS.cap?Math.min(now,LS.cap):now,min=(end-LS.start)/60000;
+  if(min>=1){const title=ids.length?ids.map(id=>SOUNDS[id].n).join(' + '):LS.entry?LS.entry.title:'Sons';
+    if(!LS.entry){LS.entry={d:key(new Date(LS.start)),min:0,kind:'Sons',title,at:LS.start};S.log.push(LS.entry);if(S.log.length>500)S.log=S.log.slice(-500)}
+    LS.entry.min=Math.round(min*10)/10;LS.entry.title=title;save();renderHome();if(current==='profile')renderProfile()}
+  if(!ids.length){LS.start=0;LS.entry=null;LS.cap=0}}
+setInterval(listenTick,15000);
 function nightRelease(){[N.urlA,N.urlB].forEach(u=>{if(u)URL.revokeObjectURL(u)});N.urlA=N.urlB=null;N.chA=null}
 function nightStop(resume,silent){if(!N.on)return;const mix=N.mix;N.on=false;N.final=false;
   if(N.el){N.el.pause();N.el.removeAttribute('src');N.el.load()}nightRelease();N.mix=null;
   if('mediaSession' in navigator)try{navigator.mediaSession.metadata=null}catch(e){}
   if(resume&&mix)Object.keys(mix).forEach(id=>{E.vol[id]=mix[id];sStart(id)});
   if(silent){T.sel=0;T.end=0;timerChips(0);clearInterval(T.iv);$('#timerline').textContent=''}
+  listenTick();
   renderSounds()}
 function nightTimerChanged(){N.final=false;if(!N.el)return;N.el.loop=true;
   if(T.end&&N.chA&&!N.urlB){setTimeout(()=>{if(N.on&&N.chA&&!N.urlB)N.urlB=wavURL(N.chA,true)},50)}}
@@ -969,10 +1009,14 @@ function renderProfile(){
   $('#chart').innerHTML=days.map((d,i)=>`<div class="bar${i===6?' today':''}"><span class="v">${vals[i]?Math.round(vals[i]):''}</span><div class="b${vals[i]?'':' zero'}" style="height:${vals[i]?Math.max(6,vals[i]/max*100):2}%"></div><span class="dl">${d.toLocaleDateString('fr-FR',{weekday:'short'}).slice(0,3)}</span></div>`).join('');
   $('#moodrow').innerHTML=days.map(d=>{const m=S.moods[key(d)];return `<div style="${m?'color:'+MOODS[m-1].c:''}" title="${m?MOODS[m-1].n:'Non renseigné'}">${m?face(m,24):'<svg width="24" height="24" viewBox="0 0 40 40"><circle cx="20" cy="20" r="3" fill="currentColor"/></svg>'}</div>`}).join('');
   const h=S.log.slice(-6).reverse();
-  $('#hist').innerHTML=h.length?h.map(l=>`<div><b style="font-weight:500">${esc(l.title)}</b><span>${new Date(l.at||l.d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} · ${l.min} min</span></div>`).join(''):'<p class="empty">Vos séances apparaîtront ici. Commencez par une minute de respiration.</p>';
+  $('#hist').innerHTML=h.length?h.map(l=>`<div><b style="font-weight:500">${esc(l.title)}</b><span>${new Date(l.at||l.d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} · ${String(l.min).replace('.',',')} min</span></div>`).join(''):'<p class="empty">Vos séances apparaîtront ici. Commencez par une minute de respiration.</p>';
   $('#pname').value=S.name||'';
 }
-$('#pname').addEventListener('input',e=>{S.name=e.target.value.trim();save()});
+$('#pname').addEventListener('input',e=>{S.name=e.target.value.trim();S.nameSet=true;save()});
+function closeWelcome(name){if(name!=null)S.name=String(name).trim().slice(0,24);S.nameSet=true;save();$('#welcome').hidden=true;renderHome()}
+$('#wgo').addEventListener('click',()=>closeWelcome($('#wname').value));
+$('#wname').addEventListener('keydown',e=>{if(e.key==='Enter')closeWelcome($('#wname').value)});
+$('#wskip').addEventListener('click',()=>closeWelcome(null));
 $('#resetZone').addEventListener('click',e=>{
   if(e.target.id==='resetBtn'){$('#resetZone').innerHTML='<span>Tout effacer définitivement ?</span><button class="danger" id="resetYes">Oui, effacer</button><button class="link" id="resetNo">Annuler</button>'}
   else if(e.target.id==='resetYes'){S={name:S.name,moods:{},log:[],tone:S.tone};save();$('#resetZone').innerHTML='<button class="danger" id="resetBtn">Effacer mes données</button>';renderProfile()}
@@ -980,6 +1024,7 @@ $('#resetZone').addEventListener('click',e=>{
 });
 
 renderHome();renderList();renderSounds();
+if(!S.nameSet)$('#welcome').hidden=false;
 const h=(location.hash||'').slice(1);if(['breathe','meditate','sounds','profile'].includes(h))go(h);
 })();
 </script>
