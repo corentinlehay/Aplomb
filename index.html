@@ -182,8 +182,8 @@ input[type=text]{background:var(--surface2);border:1px solid var(--line);border-
 
 /* Calme immédiat */
 .sos{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 18px;border-radius:var(--r);background:linear-gradient(135deg,rgba(134,194,172,.24),rgba(134,194,172,.06));border:1px solid rgba(134,194,172,.35)}
-.sos .sring{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(134,194,172,.18);color:var(--sage);animation:sosb 9.5s ease-in-out infinite}
-@keyframes sosb{0%,100%{transform:scale(.9)}26%{transform:scale(1.04)}37%{transform:scale(1.12)}}
+.sos .sring{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(134,194,172,.18);color:var(--sage);animation:sosb 13.5s ease-in-out infinite}
+@keyframes sosb{0%,100%{transform:scale(.9)}30%{transform:scale(1.04)}48%{transform:scale(1.12)}}
 .sos b{display:block;font-weight:700;font-size:16px}.sos span.t{display:block;font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:2px}
 .sos .go{margin-left:auto;flex:none;color:var(--sage)}
 /* Humeur avant / après une séance */
@@ -957,7 +957,7 @@ const PATS=[
  {id:'478',n:'Relaxation 4-7-8',s:'Pour trouver le sommeil',ph:[['Inspirez',4],['Retenez',7],['Expirez',8]]},
  {id:'box',n:'Respiration carrée',s:'4·4·4·4, calme et focus',ph:[['Inspirez',4],['Retenez',4],['Expirez',4],['Bloquez',4]]},
  {id:'46',n:'Apaisement',s:'Expiration longue 4·6',ph:[['Inspirez',4],['Expirez',6]]},
- {id:'sigh',n:'Soupir physiologique',s:'Calme immédiat, nez · nez · bouche',ph:[['Inspirez',2.5,'par le nez'],['Encore un peu',1,'par le nez, jusqu’en haut'],['Expirez',6,'lentement, par la bouche']]}
+ {id:'sigh',n:'Soupir physiologique',s:'Calme immédiat, nez · nez · bouche',ph:[['Inspirez',4,'lentement, par le nez'],['Encore un peu',2.5,'par le nez, jusqu’en haut'],['Expirez',7,'tout doucement, par la bouche']]}
 ];
 let B={pat:PATS[0],dur:3,run:false,iv:null,pi:0,pEnd:0,start:0,cycles:0,mb:0};
 $('#pats').innerHTML=PATS.map(p=>`<button class="pat" data-pat="${p.id}" aria-pressed="${p.id==='coh'}"><b>${p.n}</b><span>${p.s}</span></button>`).join('');
