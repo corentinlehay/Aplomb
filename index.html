@@ -180,6 +180,23 @@ input[type=text]{background:var(--surface2);border:1px solid var(--line);border-
 .small .iconbtn[aria-pressed="true"]{background:var(--sage);color:var(--bg)}
 .amb{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 
+/* Calme immédiat */
+.sos{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 18px;border-radius:var(--r);background:linear-gradient(135deg,rgba(134,194,172,.24),rgba(134,194,172,.06));border:1px solid rgba(134,194,172,.35)}
+.sos .sring{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(134,194,172,.18);color:var(--sage);animation:sosb 9.5s ease-in-out infinite}
+@keyframes sosb{0%,100%{transform:scale(.9)}26%{transform:scale(1.04)}37%{transform:scale(1.12)}}
+.sos b{display:block;font-weight:700;font-size:16px}.sos span.t{display:block;font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:2px}
+.sos .go{margin-left:auto;flex:none;color:var(--sage)}
+/* Humeur avant / après une séance */
+.mq{display:flex;flex-direction:column;align-items:center;gap:10px}
+.mq .ml{font-size:13px;color:var(--muted);text-align:center}
+.mq .mf{display:flex;gap:2px;justify-content:center;flex-wrap:wrap}
+.mq .face{padding:8px 4px 6px;min-width:58px}
+.mq .mres{font-size:14px;color:var(--text);text-align:center;max-width:34ch;line-height:1.45}
+.eff{display:flex;align-items:center;justify-content:center;gap:22px;margin:4px 0 12px}
+.eff>div{display:flex;flex-direction:column;align-items:center;gap:6px}
+.eff span{font-size:12px;color:var(--muted);text-align:center;line-height:1.35}.eff span b{color:var(--text);font-weight:600;font-size:13.5px}
+.eff>svg{color:var(--faint)}
+
 /* Accueil (première ouverture) */
 .welcome{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;padding:calc(env(safe-area-inset-top,0px) + 24px) 24px calc(env(safe-area-inset-bottom,0px) + 24px);overflow-y:auto}
 .welcome::before{content:"";position:fixed;inset:0;background:radial-gradient(55% 40% at 50% 30%,rgba(134,194,172,.18),transparent 70%);pointer-events:none}
@@ -189,7 +206,7 @@ input[type=text]{background:var(--surface2);border:1px solid var(--line);border-
 .wcard .btn{width:100%}
 
 @media (prefers-reduced-motion:reduce){
-  .glow,.player.run .porb,.snd.on .bars i{animation:none}
+  .glow,.player.run .porb,.snd.on .bars i,.sos .sring{animation:none}
   .bcircle{transition-duration:0s!important}
 }
 </style>
@@ -206,6 +223,12 @@ input[type=text]{background:var(--surface2);border:1px solid var(--line);border-
       <h1 id="greet"></h1>
     </header>
     <p class="quote" id="quote"></p>
+
+    <button class="sos" id="sos">
+      <span class="sring" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 9h9.5a2.5 2.5 0 1 0-2.5-2.5M3 13h14.5a2.5 2.5 0 1 1-2.5 2.5M3 17h6"/></svg></span>
+      <div><b>Calme immédiat</b><span class="t">1 minute pour faire redescendre la pression</span></div>
+      <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+    </button>
 
     <div class="mood">
       <h2>Comment vous sentez-vous&nbsp;?</h2>
@@ -251,6 +274,7 @@ input[type=text]{background:var(--surface2);border:1px solid var(--line);border-
     <div class="btn-row">
       <button class="btn" id="bstart">Commencer</button>
     </div>
+    <div class="mq" id="bmood"></div>
     <div>
       <div class="eyebrow" style="margin-bottom:10px">Rythme</div>
       <div class="pats" id="pats"></div>
@@ -313,6 +337,10 @@ input[type=text]{background:var(--surface2);border:1px solid var(--line);border-
       <div class="moodrow" id="moodrow"></div>
     </div>
     <div class="card">
+      <h2>Ce que vos séances vous apportent</h2>
+      <div id="effect" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
       <h2>Dernières séances</h2>
       <div class="hist" id="hist" style="margin-top:8px"></div>
     </div>
@@ -359,6 +387,7 @@ input[type=text]{background:var(--surface2);border:1px solid var(--line);border-
       <div class="porb"></div>
     </div>
     <p class="caption" id="pcap"></p>
+    <div class="mq" id="pmood"></div>
     <div class="ptime" id="ptime"></div>
     <div class="pctrl">
       <div class="small" aria-hidden="true"></div>
@@ -493,7 +522,7 @@ function streak(){const days=new Set(S.log.map(l=>l.d));let n=0,i=days.has(today
 function minsOn(k){return S.log.filter(l=>l.d===k).reduce((a,l)=>a+l.min,0)}
 function weekMins(){let t=0;for(let i=0;i<7;i++)t+=minsOn(key(daysBack(i)));return Math.round(t)}
 function totalMins(){return Math.round(S.log.reduce((a,l)=>a+l.min,0))}
-function logSession(min,kind,title){if(min<.25)return;S.log.push({d:today(),min:Math.round(min*10)/10,kind,title,at:Date.now()});if(S.log.length>500)S.log=S.log.slice(-500);save();renderHome()}
+function logSession(min,kind,title,mb){if(min<.25)return null;const e={d:today(),min:Math.round(min*10)/10,kind,title,at:Date.now()};if(mb)e.mb=mb;S.log.push(e);if(S.log.length>500)S.log=S.log.slice(-500);save();renderHome();return e}
 
 /* ---------- Accueil ---------- */
 function renderHome(){
@@ -927,32 +956,38 @@ const PATS=[
  {id:'coh',n:'Cohérence cardiaque',s:'5 s · 5 s, 6 cycles/min',ph:[['Inspirez',5],['Expirez',5]]},
  {id:'478',n:'Relaxation 4-7-8',s:'Pour trouver le sommeil',ph:[['Inspirez',4],['Retenez',7],['Expirez',8]]},
  {id:'box',n:'Respiration carrée',s:'4·4·4·4, calme et focus',ph:[['Inspirez',4],['Retenez',4],['Expirez',4],['Bloquez',4]]},
- {id:'46',n:'Apaisement',s:'Expiration longue 4·6',ph:[['Inspirez',4],['Expirez',6]]}
+ {id:'46',n:'Apaisement',s:'Expiration longue 4·6',ph:[['Inspirez',4],['Expirez',6]]},
+ {id:'sigh',n:'Soupir physiologique',s:'Calme immédiat, nez · nez · bouche',ph:[['Inspirez',2.5,'par le nez'],['Encore un peu',1,'par le nez, jusqu’en haut'],['Expirez',6,'lentement, par la bouche']]}
 ];
-let B={pat:PATS[0],dur:3,run:false,iv:null,pi:0,pEnd:0,start:0,cycles:0};
+let B={pat:PATS[0],dur:3,run:false,iv:null,pi:0,pEnd:0,start:0,cycles:0,mb:0};
 $('#pats').innerHTML=PATS.map(p=>`<button class="pat" data-pat="${p.id}" aria-pressed="${p.id==='coh'}"><b>${p.n}</b><span>${p.s}</span></button>`).join('');
 $('#bdur').innerHTML=[1,3,5,10].map(m=>`<button class="chip" data-d="${m}" aria-pressed="${m===3}">${m} min</button>`).join('');
-function selectPat(id){if(B.run)stopBreath();B.pat=PATS.find(p=>p.id===id);document.querySelectorAll('.pat').forEach(b=>b.setAttribute('aria-pressed',b.dataset.pat===id))}
-function selectDur(m){if(B.run)stopBreath();B.dur=m;document.querySelectorAll('#bdur .chip').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===m))}
+function selectPat(id){if(B.run)stopBreath();renderBMood();B.pat=PATS.find(p=>p.id===id);document.querySelectorAll('.pat').forEach(b=>b.setAttribute('aria-pressed',b.dataset.pat===id))}
+function selectDur(m){if(B.run)stopBreath();renderBMood();B.dur=m;document.querySelectorAll('#bdur .chip').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===m))}
 $('#pats').addEventListener('click',e=>{const b=e.target.closest('[data-pat]');if(b)selectPat(b.dataset.pat)});
 $('#bdur').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(b)selectDur(+b.dataset.d)});
 const sw=$('#btone');sw.setAttribute('aria-checked',S.tone);sw.addEventListener('click',()=>{S.tone=!S.tone;sw.setAttribute('aria-checked',S.tone);save()});
 function phase(i){
   const [name,sec]=B.pat.ph[i];B.pi=i;B.pEnd=performance.now()+sec*1000;
   const c=$('#bcircle');c.style.transitionDuration=sec+'s';
-  if(name==='Inspirez'){c.style.transform='scale(1)';tone(396)}else if(name==='Expirez'){c.style.transform='scale(.55)';tone(264)}else tone(330);
+  if(name==='Inspirez'){c.style.transform=B.pat.id==='sigh'?'scale(.95)':'scale(1)';tone(396)}else if(name==='Encore un peu'){c.style.transform='scale(1.12)';tone(470)}else if(name==='Expirez'){c.style.transform='scale(.55)';tone(264)}else tone(330);
   $('#bphase').textContent=name;
 }
-function startBreath(){ac();B.run=true;B.start=performance.now();B.cycles=0;$('#bstart').textContent='Arrêter';wake(true);phase(0);
+function startBreath(){ac();$('#bmood').hidden=true;B.run=true;B.start=performance.now();B.cycles=0;$('#bstart').textContent='Arrêter';wake(true);phase(0);
   B.iv=setInterval(()=>{const now=performance.now(),el=(now-B.start)/1000,tot=B.dur*60;
     $('#bprog').style.strokeDashoffset=295.3*(1-Math.min(1,el/tot));
-    $('#bcount').textContent=Math.max(1,Math.ceil((B.pEnd-now)/1000))+' · cycle '+(B.cycles+1);
+    const hint=B.pat.ph[B.pi][2];$('#bcount').textContent=hint||Math.max(1,Math.ceil((B.pEnd-now)/1000))+' · cycle '+(B.cycles+1);
     if(now>=B.pEnd){let n=B.pi+1;if(n>=B.pat.ph.length){n=0;B.cycles++;if(el>=tot-1){finishBreath();return}}phase(n)}},100)}
-function stopBreath(done){clearInterval(B.iv);const el=(performance.now()-B.start)/60000;if(B.run)logSession(el,'Respiration',B.pat.n);B.run=false;wake(false);
+function stopBreath(done){clearInterval(B.iv);const el=(performance.now()-B.start)/60000,mb=B.mb,entry=B.run?logSession(el,'Respiration',B.pat.n,mb):null;B.run=false;B.mb=0;wake(false);
+  if(done)askAfter($('#bmood'),entry,mb);else renderBMood();
   $('#bstart').textContent='Recommencer';const c=$('#bcircle');c.style.transitionDuration='1.2s';c.style.transform='scale(.55)';
   $('#bphase').textContent=done?'Bravo':'En pause';$('#bcount').textContent=done?B.cycles+' cycles complétés':'Touchez « Recommencer »';$('#bprog').style.strokeDashoffset=done?0:295.3}
-function finishBreath(){stopBreath(true);if(E.ctx)strike(E.master,.5,220)}
+function finishBreath(){stopBreath(true)}
 $('#bstart').addEventListener('click',()=>B.run?stopBreath():startBreath());
+function renderBMood(){if(B.run)return;moodQ($('#bmood'),'Avant de commencer, comment vous sentez-vous&nbsp;? <span style="opacity:.7">(facultatif)</span>',B.mb,m=>{B.mb=B.mb===m?0:m;renderBMood()})}
+renderBMood();
+/* Calme immédiat : un appui, et le soupir physiologique démarre tout de suite (pas de question avant, la priorité est de souffler) */
+$('#sos').addEventListener('click',()=>{go('breathe');if(B.run)stopBreath();selectPat('sigh');selectDur(1);B.mb=0;startBreath()});
 
 /* ---------- Méditer ---------- */
 const cats=['Tout',...new Set(SESS.map(s=>s.c))];let curCat='Tout';
@@ -978,6 +1013,7 @@ function openPlayer(id){
   $('#ptime').textContent=fmt(P.dur)+' restantes';$('#pplay').innerHTML=PLAY;
   const defAmb=s.c==='Sommeil'?'pluie':s.c==='Anxiété'||s.c==='Stress'?'ocean':'';
   $('#pamb').innerHTML=AMB.map(([k,n])=>`<button class="chip" data-a="${k}" aria-pressed="${k===defAmb}">${n}</button>`).join('');P.pendingAmb=defAmb;
+  P.mb=0;const ask=()=>moodQ($('#pmood'),'Avant de commencer, comment vous sentez-vous&nbsp;? <span style="opacity:.7">(facultatif)</span>',P.mb,m=>{P.mb=P.mb===m?0:m;ask()});ask();
   pl.hidden=false;document.body.style.overflow='hidden';
 }
 function setAmb(k){if(P.amb&&P.amb!==k&&P.ambMine)sStop(P.amb);P.amb=k;P.ambMine=false;if(k&&!E.on[k]){E.vol[k]=E.vol[k]??.5;sStart(k);P.ambMine=true}
@@ -990,18 +1026,32 @@ function pTick(){const now=performance.now();if(P.run){P.el+=(now-P.last)/1000;P
 function pPlay(){
   if(P.done){openPlayer(P.s.id);return}
   if(P.run){P.run=false;clearInterval(P.iv);$('#pplay').innerHTML=PLAY;$('#player').classList.remove('run');wake(false);return}
-  ac();if(P.el===0&&P.pendingAmb!==undefined)setAmb(P.pendingAmb);
+  ac();if(P.el===0&&P.pendingAmb!==undefined)setAmb(P.pendingAmb);$('#pmood').hidden=true;
   P.run=true;P.last=performance.now();$('#pplay').innerHTML=PAUSE;$('#player').classList.add('run');wake(true);pTick();P.iv=setInterval(pTick,250)}
 function pFinish(){P.run=false;P.done=true;clearInterval(P.iv);$('#player').classList.remove('run');wake(false);
-  if(E.ctx)strike(E.master,.6);logSession(P.dur/60,'Méditation',P.s.t);P.logged=true;
+  if(E.ctx)strike(E.master,.6);const entry=logSession(P.dur/60,'Méditation',P.s.t,P.mb),mb=P.mb;P.logged=true;const PP=P;setTimeout(()=>{if(P===PP)askAfter($('#pmood'),entry,mb)},1500);
   setTimeout(()=>{$('#pcap').textContent='Séance terminée. '+P.s.m+' minutes rien que pour vous.'},1500);$('#ptime').textContent='Série : '+streak()+(streak()>1?' jours':' jour');
   $('#pplay').innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12a8 8 0 1 0 2.3-5.6L4 8.5M4 4v4.5h4.5"/></svg>'}
-function pClose(){clearInterval(P.iv);if(!P.logged&&P.el>30)logSession(P.el/60,'Méditation',P.s.t);if(P.amb&&P.ambMine)sStop(P.amb);
+function pClose(){clearInterval(P.iv);if(!P.logged&&P.el>30)logSession(P.el/60,'Méditation',P.s.t,P.mb);if(P.amb&&P.ambMine)sStop(P.amb);
   wake(false);P.run=false;$('#player').hidden=true;document.body.style.overflow='';if(current==='sounds')renderSounds()}
 $('#pplay').addEventListener('click',pPlay);$('#pclose').addEventListener('click',pClose);
 $('#pback').addEventListener('click',()=>{if(P.done)return;P.el=Math.max(0,P.el-15);P.si=0;while(P.si<P.s.s.length&&P.el>=P.s.s[P.si][0]*P.dur)P.si++;if(P.si>0)$('#pcap').textContent=P.s.s[P.si-1][1];pTick()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#player').hidden)pClose()});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(P.run||B.run))wake(true)});
+
+/* ---------- Humeur avant / après une séance ---------- */
+function moodQ(el,label,sel,onPick){
+  el.innerHTML=`<div class="ml">${label}</div><div class="mf">${MOODS.map((x,i)=>`<button class="face" style="--c:${x.c}" data-m="${i+1}" aria-pressed="${sel===i+1}">${face(i+1,30)}${x.n}</button>`).join('')}</div>`;
+  el.hidden=false;el.onclick=e=>{const b=e.target.closest('[data-m]');if(b)onPick(+b.dataset.m)}}
+function askAfter(el,entry,mb){moodQ(el,'Et maintenant, comment vous sentez-vous&nbsp;?',0,ma=>{
+  if(entry)entry.ma=ma;S.moods[today()]=ma;save();renderHome();
+  const t=!mb?'Merci, c’est noté dans votre Parcours.':ma>mb?'Vous vous sentez mieux qu’au début. Gardez cette sensation avec vous.':ma===mb?'Même état qu’au début : c’est normal certains jours. Chaque séance compte.':'Merci pour votre sincérité. Certains jours sont plus lourds : n’hésitez pas à recommencer un peu plus tard.';
+  el.innerHTML=`<div class="mf" style="color:${MOODS[ma-1].c}">${face(ma,30)}</div><div class="mres">${t}</div>`;el.onclick=null})}
+function renderEffect(){const pr=S.log.filter(l=>l.mb&&l.ma),el=$('#effect');
+  if(!pr.length){el.innerHTML='<p class="empty" style="margin:0">Avant et après une respiration ou une méditation, indiquez comment vous vous sentez. Vous verrez ici ce que vos séances vous apportent.</p>';return}
+  const avg=a=>a.reduce((x,y)=>x+y,0)/a.length,fb=Math.round(avg(pr.map(l=>l.mb))),fa=Math.round(avg(pr.map(l=>l.ma))),better=pr.filter(l=>l.ma>l.mb).length;
+  el.innerHTML=`<div class="eff"><div style="color:${MOODS[fb-1].c}">${face(fb,40)}<span>En moyenne avant<br><b>${MOODS[fb-1].n}</b></span></div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><div style="color:${MOODS[fa-1].c}">${face(fa,40)}<span>En moyenne après<br><b>${MOODS[fa-1].n}</b></span></div></div>
+  <p style="margin:0;text-align:center;font-size:14px">Vous vous sentez mieux après <b>${better} séance${better>1?'s':''} sur ${pr.length}</b>.</p>`}
 
 /* ---------- Parcours ---------- */
 function renderProfile(){
@@ -1011,7 +1061,7 @@ function renderProfile(){
   $('#moodrow').innerHTML=days.map(d=>{const m=S.moods[key(d)];return `<div style="${m?'color:'+MOODS[m-1].c:''}" title="${m?MOODS[m-1].n:'Non renseigné'}">${m?face(m,24):'<svg width="24" height="24" viewBox="0 0 40 40"><circle cx="20" cy="20" r="3" fill="currentColor"/></svg>'}</div>`}).join('');
   const h=S.log.slice(-6).reverse();
   $('#hist').innerHTML=h.length?h.map(l=>`<div><b style="font-weight:500">${esc(l.title)}</b><span>${new Date(l.at||l.d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} · ${String(l.min).replace('.',',')} min</span></div>`).join(''):'<p class="empty">Vos séances apparaîtront ici. Commencez par une minute de respiration.</p>';
-  $('#pname').value=S.name||'';
+  $('#pname').value=S.name||'';renderEffect();
 }
 $('#pname').addEventListener('input',e=>{S.name=e.target.value.trim();S.nameSet=true;save()});
 function closeWelcome(name){if(name!=null)S.name=String(name).trim().slice(0,24);S.nameSet=true;save();$('#welcome').hidden=true;renderHome()}
