@@ -817,10 +817,10 @@ function sStart(id){if(E.on[id]||!ac())return;
   if(SOUNDS[id].file&&!SBUF[id]){SWANT[id]=true;refreshSnd(id);loadSample(id).then(()=>{if(SWANT[id]){delete SWANT[id];sStart(id)}}).catch(e=>{delete SWANT[id];refreshSnd(id);sndHint(e&&e.missing?'Le son « '+SOUNDS[id].n+' » est introuvable : le fichier '+SAMPLES[id].split('?')[0]+' manque sur le site.':'Impossible de charger « '+SOUNDS[id].n+' ». Vérifiez la connexion et réessayez.')});return}
   delete SWANT[id];const c=E.ctx,now=c.currentTime,ch=gain(0),snd=gain(SOUNDS[id].rev);ch.connect(E.bus);ch.connect(snd);snd.connect(E.rev);
   const v=SOUNDS[id].make(ch);ch.gain.setValueAtTime(0,now);ch.gain.setTargetAtTime(target(id),now,.9);v.tick(now+2.5);
-  E.on[id]={ch,snd,v};E.bus.gain.cancelScheduledValues(now);E.bus.gain.setTargetAtTime(1,now,.3);ensureTimer();refreshSnd(id);listenTick()}
+  E.on[id]={ch,snd,v};E.bus.gain.cancelScheduledValues(now);E.bus.gain.setTargetAtTime(1,now,.3);ensureTimer();refreshSnd(id);listenTick();scheduleAuto()}
 function sStop(id){if(SWANT[id]){delete SWANT[id];refreshSnd(id)}const o=E.on[id];if(!o)return;delete E.on[id];const now=E.ctx.currentTime;o.ch.gain.cancelScheduledValues(now);o.ch.gain.setValueAtTime(o.ch.gain.value,now);o.ch.gain.setTargetAtTime(0,now,.5);
-  setTimeout(()=>{o.v.stop();o.ch.disconnect();o.snd.disconnect()},4000);refreshSnd(id);listenTick()}
-function sVol(id,v){E.vol[id]=v;const o=E.on[id];if(o){const now=E.ctx.currentTime;o.ch.gain.cancelScheduledValues(now);o.ch.gain.setValueAtTime(o.ch.gain.value,now);o.ch.gain.setTargetAtTime(target(id),now,.08)}}
+  setTimeout(()=>{o.v.stop();o.ch.disconnect();o.snd.disconnect()},4000);refreshSnd(id);listenTick();scheduleAuto()}
+function sVol(id,v){E.vol[id]=v;scheduleAuto();const o=E.on[id];if(o){const now=E.ctx.currentTime;o.ch.gain.cancelScheduledValues(now);o.ch.gain.setValueAtTime(o.ch.gain.value,now);o.ch.gain.setTargetAtTime(target(id),now,.08)}}
 function strike(out,level,f0){if(!E.ctx)return;const g=gain(1),r=gain(.4);g.connect(out);g.connect(r);r.connect(E.rev);bowlStrike(E.ctx.currentTime+.03,g,level*.6,f0||196);setTimeout(()=>{g.disconnect();r.disconnect()},32000)}
 function tone(f){if(!S.tone||!ac())return;const c=E.ctx,t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.08,t+.05);g.gain.exponentialRampToValueAtTime(.0001,t+1.4);o.connect(g);g.connect(E.master);o.start(t);o.stop(t+1.5)}
@@ -894,26 +894,39 @@ function renderNight(){const box=$('#night');if(!box)return;const live=Object.ke
   btn.disabled=false;
   if(N.on){btn.textContent='Arrêter';txt.textContent='Actif · '+mixNames()+'. Vous pouvez verrouiller l’écran.';return}
   btn.textContent='Lancer';btn.disabled=!live;
-  txt.textContent=live?'Transforme votre ambiance en piste audio qui continue écran verrouillé.':'Activez au moins un son, puis lancez le mode nuit pour verrouiller l’écran.'}
-async function nightStart(){
-  const mix={};Object.keys(E.on).forEach(id=>mix[id]=E.vol[id]??.6);if(!Object.keys(mix).length||N.busy)return;
-  N.busy=true;renderNight();
-  // Crée l'élément audio pendant le toucher, pour que l'iPhone autorise la lecture
-  if(!N.el){N.el=new Audio();N.el.setAttribute('playsinline','');N.el.preload='auto';
+  txt.textContent=live?(N.autoOff?'Transforme votre ambiance en piste audio qui continue écran verrouillé.':'Dans quelques secondes, votre ambiance passe en lecture continue : vous pourrez verrouiller l’écran.'):'Choisissez un ou plusieurs sons : ils continueront même écran verrouillé.'}
+function nightEl(){if(!N.el){N.el=new Audio();N.el.setAttribute('playsinline','');N.el.preload='auto';
     N.el.addEventListener('timeupdate',nightTick);N.el.addEventListener('ended',()=>{if(N.final)nightStop(false,true);else{N.el.currentTime=0;N.el.play().catch(()=>{})}});
     N.el.addEventListener('pause',()=>{if(N.on&&!N.el.ended)$('#nightTxt').textContent='En pause · '+mixNames()+'.'});
     N.el.addEventListener('play',()=>{if(N.on)renderNight()});}
-  N.el.src=silentURL();N.el.play().catch(()=>{});
+  return N.el}
+/* Sur iPhone, un élément audio ne peut démarrer tout seul que s'il a déjà joué pendant un toucher :
+   on le lance en silence à chaque toucher sur un son, pour pouvoir passer plus tard en lecture continue sans intervention. */
+function primeNight(){const el=nightEl();if(!N.on&&!N.busy&&el.paused){el.loop=true;el.src=silentURL();el.play().catch(()=>{})}}
+const mixSig=()=>JSON.stringify(Object.keys(E.on).sort().map(id=>[id,E.vol[id]??.6]));
+/* Lecture continue automatique : 5 s après le dernier réglage, l'ambiance devient une piste audio qui continue écran verrouillé */
+let autoT=0;
+function scheduleAuto(){clearTimeout(autoT);if(N.autoOff)return;
+  autoT=setTimeout(()=>{if(!N.on&&!N.busy&&!document.hidden&&Object.keys(E.on).length&&document.getElementById('player').hidden)nightStart(true)},5000)}
+async function nightStart(auto){
+  const mix={};Object.keys(E.on).forEach(id=>mix[id]=E.vol[id]??.6);if(!Object.keys(mix).length||N.busy)return;
+  N.busy=true;renderNight();const sig0=mixSig();
+  nightEl();N.el.loop=true;N.el.src=silentURL();N.el.play().catch(()=>{});
   try{await new Promise(r=>setTimeout(r,60));
     const mel=Object.keys(mix).map(id=>SOUNDS[id].loop).find(Boolean);NIGHT_LOOP=mel?Math.max(1,Math.round(180/mel))*mel:180;
     const ch=await renderMix(mix,NIGHT_LOOP,f=>{$('#nightTxt').textContent='Calcul de votre ambiance… '+Math.round(f*100)+' %'});
+    // L'ambiance a changé pendant le calcul : on n'applique pas cette piste, on recommencera avec le nouveau mélange
+    if(mixSig()!==sig0){N.busy=false;renderSounds();scheduleAuto();return}
     nightRelease();N.chA=ch;N.urlA=wavURL(ch,false);N.mix=mix;N.final=false;N.last=0;
     Object.keys(E.on).forEach(sStop);if(unlockEl)unlockEl.pause();
     N.el.loop=true;N.el.src=N.urlA;N.on=true;listenTick();await N.el.play();
     if(T.end)nightTimerChanged();
     if('mediaSession' in navigator){try{navigator.mediaSession.metadata=new MediaMetadata({title:mixNames(),artist:'Souffle · mode nuit',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]});
       navigator.mediaSession.setActionHandler('play',()=>N.el.play());navigator.mediaSession.setActionHandler('pause',()=>N.el.pause());navigator.mediaSession.setActionHandler('stop',()=>nightStop(false))}catch(e){}}
-  }catch(e){N.on=false;sndHint('Le mode nuit n’a pas pu démarrer. Réessayez avec moins de sons.')}
+  }catch(e){N.on=false;N.busy=false;try{N.el.pause()}catch(_){}
+    // En cas d'échec, les sons reprennent en direct (jamais de silence imprévu) et on ne réessaie plus automatiquement
+    N.autoOff=true;if(!Object.keys(E.on).length)Object.keys(mix).forEach(id=>{E.vol[id]=mix[id];sStart(id)});
+    if(!auto)sndHint('Le mode nuit n’a pas pu démarrer. Réessayez avec moins de sons.')}
   N.busy=false;renderSounds();
 }
 /* ---------- Parcours : le temps passé à écouter des sons est compté (à partir d'une minute) ----------
@@ -949,7 +962,10 @@ function nightTick(){const ct=N.el.currentTime;
     if(N.urlB){N.el.src=N.urlB;N.el.play().catch(()=>{})}}
   N.last=ct}
 let silentU=null;function silentURL(){if(!silentU)silentU=URL.createObjectURL(new Blob([silentWav()],{type:'audio/wav'}));return silentU}
-$('#nightBtn').addEventListener('click',()=>{if(N.on)nightStop(false);else{ac();nightStart()}});
+$('#nightBtn').addEventListener('click',()=>{if(N.on)nightStop(false);else{ac();N.autoOff=false;nightStart()}});
+// Chaque toucher sur un son ou un mélange prépare la lecture continue (après les autres actions du toucher)
+$('#sgrid').addEventListener('click',e=>{if(e.target.closest('[data-snd]'))primeNight()});
+$('#presets').addEventListener('click',e=>{if(e.target.closest('[data-p]'))primeNight()});
 
 /* ---------- Respiration ---------- */
 const PATS=[
